@@ -18,7 +18,7 @@ export class RejectionExcelAdapter {
   async parseExcelFile(): Promise<QualityRecord[]> {
     // Architecture placeholder for future server-side local Excel parsing
     throw new Error(
-      'Rejection Excel parsing is not connected yet. Application is currently running in Sample Data mode.'
+      'Rejection Excel parsing is not connected yet. Application is currently awaiting an Excel upload.'
     );
   }
 }

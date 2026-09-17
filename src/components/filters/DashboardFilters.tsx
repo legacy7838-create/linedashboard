@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Filter, RotateCcw, Search, Calendar, SlidersHorizontal } from 'lucide-react';
+import { RotateCcw, Search, SlidersHorizontal } from 'lucide-react';
 import { FilterState } from '@/types/quality';
 
 interface FilterOptions {

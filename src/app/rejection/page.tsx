@@ -1,100 +1,55 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DashboardFilters } from '@/components/filters/DashboardFilters';
 import { KPICard } from '@/components/ui/KPICard';
 import { Card } from '@/components/ui/Card';
-import { QualityTrendChart } from '@/components/charts/QualityTrendChart';
-import { ParetoChart } from '@/components/charts/ParetoChart';
-import { CustomerQualityChart } from '@/components/charts/ComparisonChart';
-import { ProblematicMachinesList, PartQualityList } from '@/components/charts/HorizontalRankedChart';
+import {
+  QualityTrendChart,
+  ParetoChart,
+  CustomerQualityChart,
+  ProblematicMachinesList,
+  PartQualityList,
+} from '@/components/charts';
 import { QualityTable } from '@/components/tables/QualityTable';
 import { useQualityData } from '@/context/QualityDataContext';
+import { useQualityDerivations, createDefaultFilters } from '@/lib/hooks/useQualityDerivations';
 
-import {
-  calculateKPISummary,
-  calculateDailyTrend,
-  calculateParetoDefects,
-  calculateCustomerComparison,
-  calculateMachineRankings,
-  calculatePartRankings,
-  extractFilterOptions,
-  filterQualityRecords,
-} from '@/lib/calculations/qualityCalculations';
 import { FilterState } from '@/types/quality';
-import { formatCurrency, formatNumber, formatPercent } from '@/lib/utils/formatters';
+import { formatCurrency, formatNumber } from '@/lib/utils/formatters';
+import { NoDataState } from '@/components/ui/NoDataState';
 import { XCircle, DollarSign, Percent, UploadCloud } from 'lucide-react';
 
 export default function RejectionPage() {
-  const { qualityRecords, activeMonth, dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+  const { qualityRecords, activeMonth, hasData, setIsImportModalOpen } = useQualityData();
 
-  const [filters, setFilters] = useState<FilterState>({
-    month: activeMonth,
-    startDate: '',
-    endDate: '',
-    cellOrLine: 'ALL',
-    shift: 'ALL',
-    customer: 'ALL',
-    partNumber: 'ALL',
-    machine: 'ALL',
-    searchQuery: '',
-    type: 'REJECTION',
-  });
+  const [filters, setFilters] = useState<FilterState>(
+    createDefaultFilters({ month: activeMonth, type: 'REJECTION' })
+  );
 
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, month: activeMonth }));
-  }, [activeMonth]);
+  const effectiveFilters = useMemo(
+    () => (filters.month === activeMonth ? filters : { ...filters, month: activeMonth }),
+    [filters, activeMonth]
+  );
 
-  const filterOptions = useMemo(() => {
-    return extractFilterOptions(qualityRecords);
-  }, [qualityRecords]);
-
-  const rejectionRecords = useMemo(() => {
-    return filterQualityRecords(qualityRecords, { ...filters, type: 'REJECTION' });
-  }, [qualityRecords, filters]);
-
-  const kpiSummary = useMemo(() => {
-    return calculateKPISummary(rejectionRecords, []);
-  }, [rejectionRecords]);
-
-  const dailyTrend = useMemo(() => {
-    return calculateDailyTrend(rejectionRecords, []);
-  }, [rejectionRecords]);
-
-  const paretoDefects = useMemo(() => {
-    return calculateParetoDefects(rejectionRecords, []);
-  }, [rejectionRecords]);
-
-  const customerComparison = useMemo(() => {
-    return calculateCustomerComparison(rejectionRecords, []);
-  }, [rejectionRecords]);
-
-  const machineRankings = useMemo(() => {
-    return calculateMachineRankings(rejectionRecords);
-  }, [rejectionRecords]);
-
-  const partRankings = useMemo(() => {
-    return calculatePartRankings(rejectionRecords, []);
-  }, [rejectionRecords]);
+  const {
+    filteredQualityRecords: rejectionRecords,
+    filterOptions,
+    kpiSummary,
+    dailyTrend,
+    paretoDefects,
+    customerComparison,
+    machineRankings,
+    partRankings,
+  } = useQualityDerivations(qualityRecords, [], effectiveFilters, { includeFqc: false });
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      month: 'ALL',
-      startDate: '',
-      endDate: '',
-      cellOrLine: 'ALL',
-      shift: 'ALL',
-      customer: 'ALL',
-      partNumber: 'ALL',
-      machine: 'ALL',
-      searchQuery: '',
-      type: 'REJECTION',
-    });
+    setFilters(createDefaultFilters({ type: 'REJECTION' }));
   };
 
   return (
@@ -102,7 +57,7 @@ export default function RejectionPage() {
       <PageHeader
         title="Line Rejection Dashboard"
         subtitle="Dedicated root cause monitoring, scrap cost analytics, and machine non-conformance tracking."
-        badgeText={dataMode === 'EXCEL_IMPORTED' ? `Excel: ${importedFileName}` : 'Critical Scrap'}
+        badgeText={hasData ? 'Excel Data Loaded' : 'No Data Loaded'}
         badgeColor="red"
         actions={
           <button
@@ -115,12 +70,20 @@ export default function RejectionPage() {
         }
       />
 
-      <DashboardFilters
-        filters={filters}
-        options={filterOptions}
-        onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-      />
+      {!hasData ? (
+        <NoDataState
+          title="No Rejection Data Available"
+          message="Import a Line Rejection Excel workbook containing Part No, Machine, and Non-Conformance columns to populate this dashboard."
+          onImport={() => setIsImportModalOpen(true)}
+        />
+      ) : (
+        <>
+          <DashboardFilters
+            filters={filters}
+            options={filterOptions}
+            onFilterChange={handleFilterChange}
+            onReset={handleResetFilters}
+          />
 
       {/* KPI Cards for Rejection */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -239,6 +202,8 @@ export default function RejectionPage() {
         subtitle="Individual scrapped records with tooling root cause and action taken"
         onResetFilters={handleResetFilters}
       />
+        </>
+      )}
     </div>
   );
 }

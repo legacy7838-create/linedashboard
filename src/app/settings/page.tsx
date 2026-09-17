@@ -19,12 +19,12 @@ import {
 
 export default function SettingsPage() {
   const {
-    dataMode,
+    hasData,
     importedFileName,
     importSummary,
     qualityRecords,
     fqcRecords,
-    resetToSampleData,
+    clearData,
     setIsImportModalOpen,
   } = useQualityData();
 
@@ -33,17 +33,17 @@ export default function SettingsPage() {
       <PageHeader
         title="Internal Portal Configuration & Data Settings"
         subtitle="System status, data source adapter configuration, and local server integration readiness."
-        badgeText={dataMode === 'EXCEL_IMPORTED' ? 'Excel Integrated' : 'Sample Data Mode'}
-        badgeColor={dataMode === 'EXCEL_IMPORTED' ? 'emerald' : 'blue'}
+        badgeText={hasData ? 'Excel Integrated' : 'No Data Loaded'}
+        badgeColor={hasData ? 'emerald' : 'orange'}
         actions={
           <div className="flex items-center gap-2">
-            {dataMode === 'EXCEL_IMPORTED' && (
+            {hasData && (
               <button
-                onClick={resetToSampleData}
+                onClick={clearData}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset to Sample Data</span>
+                <span>Clear Imported Data</span>
               </button>
             )}
             <button
@@ -68,13 +68,13 @@ export default function SettingsPage() {
           <div className="text-lg font-extrabold text-slate-800 mt-2 flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
-                dataMode === 'EXCEL_IMPORTED' ? 'bg-emerald-500' : 'bg-amber-500'
+                hasData ? 'bg-emerald-500' : 'bg-amber-500'
               }`}
             ></span>
-            {dataMode === 'EXCEL_IMPORTED' ? 'Excel Import Active' : 'Sample Data'}
+            {hasData ? 'Excel Import Active' : 'Awaiting Excel Upload'}
           </div>
           <p className="text-[11px] text-slate-400 mt-1 truncate">
-            {dataMode === 'EXCEL_IMPORTED' ? importedFileName : 'Running with internal dummy dataset'}
+            {hasData ? importedFileName : 'No dataset loaded'}
           </p>
         </div>
 
@@ -101,7 +101,7 @@ export default function SettingsPage() {
           </div>
           <div className="text-lg font-extrabold text-slate-700 mt-2 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-            {fqcRecords.length > 0 ? 'Integrated' : 'Sample Mode'}
+            {fqcRecords.length > 0 ? 'Integrated' : 'Awaiting Upload'}
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
             Separate FQC format parser enabled
@@ -125,7 +125,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Uploaded File Details (if active) */}
-      {dataMode === 'EXCEL_IMPORTED' && importSummary && (
+      {hasData && importSummary && (
         <Card
           title="Active Excel Workbook Details"
           subtitle={`Imported from local file: ${importedFileName}`}

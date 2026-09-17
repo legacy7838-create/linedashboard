@@ -1,100 +1,55 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DashboardFilters } from '@/components/filters/DashboardFilters';
 import { KPICard } from '@/components/ui/KPICard';
 import { Card } from '@/components/ui/Card';
-import { QualityTrendChart } from '@/components/charts/QualityTrendChart';
-import { ParetoChart } from '@/components/charts/ParetoChart';
-import { CustomerQualityChart } from '@/components/charts/ComparisonChart';
-import { ProblematicMachinesList, PartQualityList } from '@/components/charts/HorizontalRankedChart';
+import {
+  QualityTrendChart,
+  ParetoChart,
+  CustomerQualityChart,
+  ProblematicMachinesList,
+  PartQualityList,
+} from '@/components/charts';
 import { QualityTable } from '@/components/tables/QualityTable';
 import { useQualityData } from '@/context/QualityDataContext';
+import { useQualityDerivations, createDefaultFilters } from '@/lib/hooks/useQualityDerivations';
 
-import {
-  calculateKPISummary,
-  calculateDailyTrend,
-  calculateParetoDefects,
-  calculateCustomerComparison,
-  calculateMachineRankings,
-  calculatePartRankings,
-  extractFilterOptions,
-  filterQualityRecords,
-} from '@/lib/calculations/qualityCalculations';
 import { FilterState } from '@/types/quality';
-import { formatCurrency, formatNumber, formatPercent } from '@/lib/utils/formatters';
+import { formatCurrency, formatNumber } from '@/lib/utils/formatters';
+import { NoDataState } from '@/components/ui/NoDataState';
 import { RotateCcw, Wrench, Percent, UploadCloud } from 'lucide-react';
 
 export default function ReworkPage() {
-  const { qualityRecords, activeMonth, dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+  const { qualityRecords, activeMonth, hasData, setIsImportModalOpen } = useQualityData();
 
-  const [filters, setFilters] = useState<FilterState>({
-    month: activeMonth,
-    startDate: '',
-    endDate: '',
-    cellOrLine: 'ALL',
-    shift: 'ALL',
-    customer: 'ALL',
-    partNumber: 'ALL',
-    machine: 'ALL',
-    searchQuery: '',
-    type: 'REWORK',
-  });
+  const [filters, setFilters] = useState<FilterState>(
+    createDefaultFilters({ month: activeMonth, type: 'REWORK' })
+  );
 
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, month: activeMonth }));
-  }, [activeMonth]);
+  const effectiveFilters = useMemo(
+    () => (filters.month === activeMonth ? filters : { ...filters, month: activeMonth }),
+    [filters, activeMonth]
+  );
 
-  const filterOptions = useMemo(() => {
-    return extractFilterOptions(qualityRecords);
-  }, [qualityRecords]);
-
-  const reworkRecords = useMemo(() => {
-    return filterQualityRecords(qualityRecords, { ...filters, type: 'REWORK' });
-  }, [qualityRecords, filters]);
-
-  const kpiSummary = useMemo(() => {
-    return calculateKPISummary(reworkRecords, []);
-  }, [reworkRecords]);
-
-  const dailyTrend = useMemo(() => {
-    return calculateDailyTrend(reworkRecords, []);
-  }, [reworkRecords]);
-
-  const paretoDefects = useMemo(() => {
-    return calculateParetoDefects(reworkRecords, []);
-  }, [reworkRecords]);
-
-  const customerComparison = useMemo(() => {
-    return calculateCustomerComparison(reworkRecords, []);
-  }, [reworkRecords]);
-
-  const machineRankings = useMemo(() => {
-    return calculateMachineRankings(reworkRecords);
-  }, [reworkRecords]);
-
-  const partRankings = useMemo(() => {
-    return calculatePartRankings(reworkRecords, []);
-  }, [reworkRecords]);
+  const {
+    filteredQualityRecords: reworkRecords,
+    filterOptions,
+    kpiSummary,
+    dailyTrend,
+    paretoDefects,
+    customerComparison,
+    machineRankings,
+    partRankings,
+  } = useQualityDerivations(qualityRecords, [], effectiveFilters, { includeFqc: false });
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      month: 'ALL',
-      startDate: '',
-      endDate: '',
-      cellOrLine: 'ALL',
-      shift: 'ALL',
-      customer: 'ALL',
-      partNumber: 'ALL',
-      machine: 'ALL',
-      searchQuery: '',
-      type: 'REWORK',
-    });
+    setFilters(createDefaultFilters({ type: 'REWORK' }));
   };
 
   return (
@@ -102,7 +57,7 @@ export default function ReworkPage() {
       <PageHeader
         title="Line Rework Dashboard"
         subtitle="Tracking reworkable non-conformances, recovery labor costs, and tooling adjustments."
-        badgeText={dataMode === 'EXCEL_IMPORTED' ? `Excel: ${importedFileName}` : 'Rework Tracking'}
+        badgeText={hasData ? 'Excel Data Loaded' : 'No Data Loaded'}
         badgeColor="orange"
         actions={
           <button
@@ -115,12 +70,20 @@ export default function ReworkPage() {
         }
       />
 
-      <DashboardFilters
-        filters={filters}
-        options={filterOptions}
-        onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-      />
+      {!hasData ? (
+        <NoDataState
+          title="No Rework Data Available"
+          message="Import a Line Rework Excel workbook to populate rework volume, recovery cost, and tooling adjustment analytics."
+          onImport={() => setIsImportModalOpen(true)}
+        />
+      ) : (
+        <>
+          <DashboardFilters
+            filters={filters}
+            options={filterOptions}
+            onFilterChange={handleFilterChange}
+            onReset={handleResetFilters}
+          />
 
       {/* KPI Cards for Rework */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -239,6 +202,8 @@ export default function ReworkPage() {
         subtitle="Individual rework operations with root causes and corrective actions"
         onResetFilters={handleResetFilters}
       />
+        </>
+      )}
     </div>
   );
 }

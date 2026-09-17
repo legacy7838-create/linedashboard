@@ -16,7 +16,7 @@ export class FQCExcelAdapter {
 
   async parseExcelFile(): Promise<FQCRecord[]> {
     throw new Error(
-      'FQC Fallout Excel parsing is not connected yet. Application is currently running in Sample Data mode.'
+      'FQC Fallout Excel parsing is not connected yet. Application is currently awaiting an Excel upload.'
     );
   }
 }

@@ -25,20 +25,42 @@ export function calculateKPISummary(
   fqcRecords: FQCRecord[],
   totalProducedQty?: number
 ): KPISummary {
-  const rejectionRecords = records.filter(r => r.type === 'REJECTION');
-  const reworkRecords = records.filter(r => r.type === 'REWORK');
-  const directFqcRecords = records.filter(r => r.type === 'FQC_FALLOUT');
+  // Single pass to partition records instead of three separate filters.
+  const rejectionRecords: QualityRecord[] = [];
+  const reworkRecords: QualityRecord[] = [];
+  const directFqcRecords: QualityRecord[] = [];
 
-  const totalRejectionQty = rejectionRecords.reduce((sum, r) => sum + r.quantity, 0);
-  const totalRejectionCost = rejectionRecords.reduce((sum, r) => sum + r.totalCost, 0);
+  for (const r of records) {
+    if (r.type === 'REJECTION') rejectionRecords.push(r);
+    else if (r.type === 'REWORK') reworkRecords.push(r);
+    else if (r.type === 'FQC_FALLOUT') directFqcRecords.push(r);
+  }
 
-  const totalReworkQty = reworkRecords.reduce((sum, r) => sum + r.quantity, 0);
-  const totalReworkCost = reworkRecords.reduce((sum, r) => sum + r.totalCost, 0);
+  let totalRejectionQty = 0;
+  let totalRejectionCost = 0;
+  for (const r of rejectionRecords) {
+    totalRejectionQty += r.quantity;
+    totalRejectionCost += r.totalCost;
+  }
+
+  let totalReworkQty = 0;
+  let totalReworkCost = 0;
+  for (const r of reworkRecords) {
+    totalReworkQty += r.quantity;
+    totalReworkCost += r.totalCost;
+  }
 
   // FQC records can be in dedicated FQC dataset or in general records
-  const totalFqcQty = fqcRecords.length > 0 
-    ? fqcRecords.reduce((sum, r) => sum + r.quantity, 0)
-    : directFqcRecords.reduce((sum, r) => sum + r.quantity, 0);
+  let totalFqcQty = 0;
+  let totalInspected = 0;
+  if (fqcRecords.length > 0) {
+    for (const r of fqcRecords) {
+      totalFqcQty += r.quantity;
+      totalInspected += r.lotSizeInspected;
+    }
+  } else {
+    for (const r of directFqcRecords) totalFqcQty += r.quantity;
+  }
 
   const fqcDefectCount = fqcRecords.length > 0 ? fqcRecords.length : directFqcRecords.length;
 
@@ -53,13 +75,10 @@ export function calculateKPISummary(
     : 'N/A';
 
   // For FQC: calculate average fallout rate if lot inspected is known
-  let fqcRate: number | 'N/A' = 'N/A';
-  if (fqcRecords.length > 0) {
-    const totalInspected = fqcRecords.reduce((sum, r) => sum + r.lotSizeInspected, 0);
-    if (totalInspected > 0) {
-      fqcRate = (totalFqcQty / totalInspected) * 100;
-    }
-  }
+  const fqcRate: number | 'N/A' =
+    fqcRecords.length > 0 && totalInspected > 0
+      ? (totalFqcQty / totalInspected) * 100
+      : 'N/A';
 
   return {
     totalRejectionQty,

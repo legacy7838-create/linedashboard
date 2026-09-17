@@ -13,16 +13,58 @@ import {
 } from 'recharts';
 import { CustomerComparisonItem, ShiftComparisonItem } from '@/types/quality';
 import { QUALITY_COLORS } from '@/lib/constants/qualityConstants';
+import {
+  CHART_TOOLTIP_STYLE,
+  CHART_TOOLTIP_ITEM_STYLE,
+  CHART_TOOLTIP_LABEL_STYLE,
+  CHART_LEGEND_WRAPPER_STYLE,
+  CHART_GRID_STROKE,
+  CHART_AXIS_STROKE,
+  CHART_AXIS_LINE,
+  CHART_EMPTY_CLASS,
+} from './chartStyles';
+
+const CUSTOMER_MARGIN = { top: 10, right: 15, left: -15, bottom: 25 };
+const SHIFT_MARGIN = { top: 10, right: 15, left: -15, bottom: 0 };
+
+/** The three Bar series are identical across both charts below. */
+function QualityBars({ maxBarSize }: { maxBarSize: number }) {
+  return (
+    <>
+      <Bar
+        dataKey="rejection"
+        name="Rejection"
+        fill={QUALITY_COLORS.rejection.primary}
+        radius={[4, 4, 0, 0]}
+        maxBarSize={maxBarSize}
+      />
+      <Bar
+        dataKey="rework"
+        name="Rework"
+        fill={QUALITY_COLORS.rework.primary}
+        radius={[4, 4, 0, 0]}
+        maxBarSize={maxBarSize}
+      />
+      <Bar
+        dataKey="fqc"
+        name="FQC Fallout"
+        fill={QUALITY_COLORS.fqc.primary}
+        radius={[4, 4, 0, 0]}
+        maxBarSize={maxBarSize}
+      />
+    </>
+  );
+}
 
 interface CustomerChartProps {
   data: CustomerComparisonItem[];
   height?: number;
 }
 
-export function CustomerQualityChart({ data, height = 280 }: CustomerChartProps) {
+function CustomerQualityChartImpl({ data, height = 280 }: CustomerChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-xs text-slate-400 font-medium">
+      <div className={CHART_EMPTY_CLASS}>
         No customer quality data available.
       </div>
     );
@@ -31,65 +73,38 @@ export function CustomerQualityChart({ data, height = 280 }: CustomerChartProps)
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 15, left: -15, bottom: 25 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+        <BarChart data={data} margin={CUSTOMER_MARGIN}>
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="customer"
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
-            axisLine={{ stroke: '#E2E8F0' }}
+            axisLine={CHART_AXIS_LINE}
             interval={0}
             angle={-15}
             textAnchor="end"
           />
           <YAxis
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
             axisLine={false}
             allowDecimals={false}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: '#0F172A',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#F8FAFC',
-              fontSize: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            }}
-            itemStyle={{ color: '#F8FAFC', padding: '2px 0' }}
-            labelStyle={{ fontWeight: 'bold', color: '#94A3B8', marginBottom: '4px' }}
+            contentStyle={CHART_TOOLTIP_STYLE}
+            itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+            labelStyle={CHART_TOOLTIP_LABEL_STYLE}
           />
           <Legend
             verticalAlign="top"
             align="right"
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: '11px', paddingBottom: '10px' }}
+            wrapperStyle={CHART_LEGEND_WRAPPER_STYLE}
           />
-          <Bar
-            dataKey="rejection"
-            name="Rejection"
-            fill={QUALITY_COLORS.rejection.primary}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={28}
-          />
-          <Bar
-            dataKey="rework"
-            name="Rework"
-            fill={QUALITY_COLORS.rework.primary}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={28}
-          />
-          <Bar
-            dataKey="fqc"
-            name="FQC Fallout"
-            fill={QUALITY_COLORS.fqc.primary}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={28}
-          />
+          <QualityBars maxBarSize={28} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -101,10 +116,10 @@ interface ShiftChartProps {
   height?: number;
 }
 
-export function ShiftQualityChart({ data, height = 280 }: ShiftChartProps) {
+function ShiftQualityChartImpl({ data, height = 280 }: ShiftChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-xs text-slate-400 font-medium">
+      <div className={CHART_EMPTY_CLASS}>
         No shift quality data available.
       </div>
     );
@@ -113,64 +128,40 @@ export function ShiftQualityChart({ data, height = 280 }: ShiftChartProps) {
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+        <BarChart data={data} margin={SHIFT_MARGIN}>
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="shift"
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
-            axisLine={{ stroke: '#E2E8F0' }}
+            axisLine={CHART_AXIS_LINE}
           />
           <YAxis
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
             axisLine={false}
             allowDecimals={false}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: '#0F172A',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#F8FAFC',
-              fontSize: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            }}
-            itemStyle={{ color: '#F8FAFC', padding: '2px 0' }}
-            labelStyle={{ fontWeight: 'bold', color: '#94A3B8', marginBottom: '4px' }}
+            contentStyle={CHART_TOOLTIP_STYLE}
+            itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+            labelStyle={CHART_TOOLTIP_LABEL_STYLE}
           />
           <Legend
             verticalAlign="top"
             align="right"
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: '11px', paddingBottom: '10px' }}
+            wrapperStyle={CHART_LEGEND_WRAPPER_STYLE}
           />
-          <Bar
-            dataKey="rejection"
-            name="Rejection"
-            fill={QUALITY_COLORS.rejection.primary}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={32}
-          />
-          <Bar
-            dataKey="rework"
-            name="Rework"
-            fill={QUALITY_COLORS.rework.primary}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={32}
-          />
-          <Bar
-            dataKey="fqc"
-            name="FQC Fallout"
-            fill={QUALITY_COLORS.fqc.primary}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={32}
-          />
+          <QualityBars maxBarSize={32} />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 }
+
+export const CustomerQualityChart = React.memo(CustomerQualityChartImpl);
+export const ShiftQualityChart = React.memo(ShiftQualityChartImpl);

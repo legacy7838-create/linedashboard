@@ -1,34 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import { RefreshCw, User, Calendar, ShieldCheck, Clock, UploadCloud, FileSpreadsheet } from 'lucide-react';
+import { RefreshCw, User, Calendar, ShieldCheck, UploadCloud, FileSpreadsheet } from 'lucide-react';
 import { COMPANY_NAME, PORTAL_NAME } from '@/lib/constants/qualityConstants';
 import { useQualityData } from '@/context/QualityDataContext';
 
 interface HeaderProps {
   onRefresh?: () => void;
-  lastUpdated?: string;
 }
 
 export function Header({
   onRefresh,
-  lastUpdated,
 }: HeaderProps) {
   const {
     activeMonth,
-    dataMode,
+    hasData,
     importedFileName,
     setIsImportModalOpen,
   } = useQualityData();
 
   const [isSpinning, setIsSpinning] = useState(false);
-  const displayTime = lastUpdated || new Date().toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   const handleRefreshClick = () => {
     setIsSpinning(true);
@@ -64,14 +55,14 @@ export function Header({
         <button
           onClick={() => setIsImportModalOpen(true)}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs active:scale-95 ${
-            dataMode === 'EXCEL_IMPORTED'
+            hasData
               ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
               : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
           }`}
           title="Import Local Excel Quality File (.xlsx)"
         >
           <UploadCloud className="w-4 h-4" />
-          <span>{dataMode === 'EXCEL_IMPORTED' ? 'Excel Loaded' : 'Import Excel'}</span>
+          <span>{hasData ? 'Excel Loaded' : 'Import Excel'}</span>
         </button>
 
         {/* Data Source Indicator Pill */}
@@ -79,14 +70,14 @@ export function Header({
           onClick={() => setIsImportModalOpen(true)}
           className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer border hover:bg-slate-50 transition-colors"
           style={{
-            borderColor: dataMode === 'EXCEL_IMPORTED' ? '#A7F3D0' : '#E2E8F0',
-            backgroundColor: dataMode === 'EXCEL_IMPORTED' ? '#ECFDF5' : '#F8FAFC',
-            color: dataMode === 'EXCEL_IMPORTED' ? '#065F46' : '#475569',
+            borderColor: hasData ? '#A7F3D0' : '#E2E8F0',
+            backgroundColor: hasData ? '#ECFDF5' : '#F8FAFC',
+            color: hasData ? '#065F46' : '#475569',
           }}
         >
-          <FileSpreadsheet className={`w-3.5 h-3.5 ${dataMode === 'EXCEL_IMPORTED' ? 'text-emerald-600' : 'text-slate-400'}`} />
+          <FileSpreadsheet className={`w-3.5 h-3.5 ${hasData ? 'text-emerald-600' : 'text-slate-400'}`} />
           <span className="truncate max-w-[160px]">
-            {dataMode === 'EXCEL_IMPORTED' ? importedFileName : 'Sample Data Mode'}
+            {hasData ? importedFileName : 'No Data Loaded'}
           </span>
         </div>
 

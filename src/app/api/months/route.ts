@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const months = await qualityDataService.getAvailableMonths();
     return NextResponse.json({ success: true, months });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch available months' },
       { status: 500 }

@@ -15,7 +15,7 @@ export class ReworkExcelAdapter {
 
   async parseExcelFile(): Promise<QualityRecord[]> {
     throw new Error(
-      'Rework Excel parsing is not connected yet. Application is currently running in Sample Data mode.'
+      'Rework Excel parsing is not connected yet. Application is currently awaiting an Excel upload.'
     );
   }
 }

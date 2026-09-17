@@ -2,7 +2,7 @@ import { QualityRecord, FQCRecord, DataStatusInfo } from '@/types/quality';
 
 /**
  * Interface defining the contract for Quality Data Providers.
- * This allows seamless transition from Dummy Data to Server-Side Excel Adapters.
+ * This allows swapping the default empty source for server-side Excel adapters.
  */
 export interface QualityDataAdapter {
   getAvailableMonths(): Promise<string[]>;
