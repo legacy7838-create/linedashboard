@@ -1,12 +1,12 @@
 import { QualityDataAdapter } from './QualityDataAdapter';
-import { DummyDataAdapter } from './DummyDataAdapter';
+import { EmptyDataAdapter } from './EmptyDataAdapter';
 import { QualityRecord, FQCRecord, DataStatusInfo } from '@/types/quality';
 
 class QualityDataService {
   private adapter: QualityDataAdapter;
 
   constructor(adapter?: QualityDataAdapter) {
-    this.adapter = adapter || new DummyDataAdapter();
+    this.adapter = adapter || new EmptyDataAdapter();
   }
 
   public setAdapter(adapter: QualityDataAdapter) {

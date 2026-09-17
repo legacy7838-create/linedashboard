@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { QualityRecord, FQCRecord } from '@/types/quality';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { TablePagination } from '@/components/ui/TablePagination';
@@ -32,7 +32,7 @@ type CombinedRecord = {
   reason?: string;
 };
 
-export function QualityTable({
+export const QualityTable = React.memo(function QualityTable({
   records,
   fqcRecords = [],
   title = 'Recent Quality Records',
@@ -45,8 +45,9 @@ export function QualityTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedRecord, setSelectedRecord] = useState<CombinedRecord | null>(null);
 
-  // Combine general quality records and FQC records for unified tabular viewing
-  const combined: CombinedRecord[] = [
+  // Combine general quality records and FQC records for unified tabular viewing.
+  // Memoized so sorting below is not invalidated by unrelated re-renders.
+  const combined: CombinedRecord[] = useMemo(() => [
     ...records.map((r) => ({
       id: r.id,
       date: r.date,
@@ -77,27 +78,30 @@ export function QualityTable({
       shift: f.shift,
       reason: f.containmentAction,
     })),
-  ];
+  ], [records, fqcRecords]);
 
-  // Sorting
-  const sortedRecords = [...combined].sort((a, b) => {
-    let aVal = a[sortField];
-    let bVal = b[sortField];
+  // Sorting — memoized because it is O(n log n) over the full dataset even
+  // though only one page of rows is rendered.
+  const sortedRecords = useMemo(() => {
+    return [...combined].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
 
-    if (aVal === undefined || aVal === null) aVal = '';
-    if (bVal === undefined || bVal === null) bVal = '';
+      if (aVal === undefined || aVal === null) aVal = '';
+      if (bVal === undefined || bVal === null) bVal = '';
 
-    if (typeof aVal === 'number' && typeof bVal === 'number') {
-      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-    }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
 
-    const strA = String(aVal).toLowerCase();
-    const strB = String(bVal).toLowerCase();
+      const strA = String(aVal).toLowerCase();
+      const strB = String(bVal).toLowerCase();
 
-    return sortDirection === 'asc'
-      ? strA.localeCompare(strB)
-      : strB.localeCompare(strA);
-  });
+      return sortDirection === 'asc'
+        ? strA.localeCompare(strB)
+        : strB.localeCompare(strA);
+    });
+  }, [combined, sortField, sortDirection]);
 
   // Pagination slice
   const startIndex = (currentPage - 1) * pageSize;
@@ -382,4 +386,4 @@ export function QualityTable({
       )}
     </div>
   );
-}
+});

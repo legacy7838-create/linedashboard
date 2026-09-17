@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { QualityTable } from '@/components/tables/QualityTable';
+import { NoDataState } from '@/components/ui/NoDataState';
 import { useQualityData } from '@/context/QualityDataContext';
 import {
   calculateKPISummary,
@@ -12,21 +13,40 @@ import {
 } from '@/lib/calculations/qualityCalculations';
 import { FilterState, QualityType } from '@/types/quality';
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters';
-import { FileText, Download, Printer, Filter, UploadCloud } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Download, Printer, Filter, UploadCloud, Loader2 } from 'lucide-react';
+
+/**
+ * Neutralize spreadsheet formula injection: a cell whose value begins with
+ * =, +, -, or @ is interpreted as a formula by Excel/Sheets on open.
+ * Prefixing with a single quote forces it to be treated as literal text.
+ */
+function sanitizeSpreadsheetCell(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
+function sanitizeExportRow<T extends Record<string, unknown>>(row: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    out[key] = sanitizeSpreadsheetCell(value);
+  }
+  return out as T;
+}
 
 export default function ReportsPage() {
-  const { qualityRecords, fqcRecords, activeMonth, dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+  const { qualityRecords, fqcRecords, activeMonth, hasData, importedFileName, setIsImportModalOpen } = useQualityData();
 
-  const [selectedMonth, setSelectedMonth] = useState(activeMonth);
+  // `selectedMonth` starts as null meaning "follow the global active month".
+  // Selecting a specific month sets it explicitly, which avoids mirroring
+  // activeMonth into state via an effect.
+  const [selectedMonthOverride, setSelectedMonthOverride] = useState<string | null>(null);
+  const selectedMonth = selectedMonthOverride ?? activeMonth;
+  const setSelectedMonth = setSelectedMonthOverride;
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [dataType, setDataType] = useState<'ALL' | QualityType>('ALL');
   const [selectedLine, setSelectedLine] = useState('ALL');
-
-  useEffect(() => {
-    setSelectedMonth(activeMonth);
-  }, [activeMonth]);
+  const [isExporting, setIsExporting] = useState(false);
 
   const filterOptions = useMemo(() => {
     return extractFilterOptions(qualityRecords, fqcRecords);
@@ -65,7 +85,9 @@ export default function ReportsPage() {
     window.print();
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
+    if (!hasData) return;
+
     const exportData = [
       ...filteredQualityRecords.map(r => ({
         'Date': r.date,
@@ -101,10 +123,16 @@ export default function ReportsPage() {
       }))
     ];
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Quality_Report');
-    XLSX.writeFile(wb, `Quality_Report_${selectedMonth}_${Date.now()}.csv`);
+    setIsExporting(true);
+    try {
+      const XLSX = await import('xlsx');
+      const ws = XLSX.utils.json_to_sheet(exportData.map(sanitizeExportRow));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Quality_Report');
+      XLSX.writeFile(wb, `Quality_Report_${selectedMonth}_${Date.now()}.csv`);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -112,8 +140,8 @@ export default function ReportsPage() {
       <PageHeader
         title="Quality Reports & Executive Summary"
         subtitle="Generate, preview, and audit customizable quality reports for plant operations."
-        badgeText={dataMode === 'EXCEL_IMPORTED' ? `Excel: ${importedFileName}` : 'Internal QA Report'}
-        badgeColor={dataMode === 'EXCEL_IMPORTED' ? 'emerald' : 'blue'}
+        badgeText={hasData ? `Excel: ${importedFileName}` : 'No Data Loaded'}
+        badgeColor={hasData ? 'emerald' : 'orange'}
         actions={
           <div className="flex items-center gap-2">
             <button
@@ -125,21 +153,36 @@ export default function ReportsPage() {
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
+              disabled={!hasData}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print</span>
             </button>
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-xs"
+              disabled={!hasData || isExporting}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>{isExporting ? 'Exporting...' : 'Export CSV'}</span>
             </button>
           </div>
         }
       />
+
+      {!hasData ? (
+        <NoDataState
+          title="No Report Data Available"
+          message="Import a Line Rejection / Rework / FQC Excel workbook to configure, preview, and export quality audit reports."
+          onImport={() => setIsImportModalOpen(true)}
+        />
+      ) : (
+        <>
 
       {/* Report Parameter Controls */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
@@ -175,7 +218,7 @@ export default function ReportsPage() {
             </label>
             <select
               value={dataType}
-              onChange={(e) => setDataType(e.target.value as any)}
+              onChange={(e) => setDataType(e.target.value as 'ALL' | QualityType)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="ALL">All Categories (Rej + Rew + FQC)</option>
@@ -294,6 +337,8 @@ export default function ReportsPage() {
         title="Report Records Preview"
         subtitle="Complete records included in the generated quality audit report"
       />
+      </>
+      )}
     </div>
   );
 }

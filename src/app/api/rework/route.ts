@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       count: reworkRecords.length,
       records: reworkRecords,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch rework data' },
       { status: 500 }

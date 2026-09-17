@@ -13,7 +13,6 @@ import {
   Settings,
   Factory,
   CheckCircle2,
-  FileSpreadsheet,
   Upload,
 } from 'lucide-react';
 import { useQualityData } from '@/context/QualityDataContext';
@@ -61,7 +60,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+  const { hasData, importedFileName, setIsImportModalOpen } = useQualityData();
 
   return (
     <aside className="w-64 bg-[#0B132B] text-slate-200 flex flex-col shrink-0 min-h-screen border-r border-slate-800 select-none">
@@ -140,18 +139,18 @@ export function Sidebar() {
             </span>
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${
-                dataMode === 'EXCEL_IMPORTED'
+                hasData
                   ? 'bg-emerald-950/90 text-emerald-300 border-emerald-800/70'
                   : 'bg-amber-950/80 text-amber-300 border-amber-800/50'
               }`}
             >
-              {dataMode === 'EXCEL_IMPORTED' ? 'Excel File' : 'Sample Data'}
+              {hasData ? 'Excel File' : 'No Data'}
             </span>
           </div>
           <p className="text-[11px] text-slate-400 leading-tight mt-1 truncate">
-            {dataMode === 'EXCEL_IMPORTED'
+            {hasData
               ? importedFileName
-              : 'Desktop Mode. Upload Excel to view real records.'}
+              : 'Upload Excel to view records.'}
           </p>
         </div>
       </div>

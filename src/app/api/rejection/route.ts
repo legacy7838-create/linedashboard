@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       count: rejectionRecords.length,
       records: rejectionRecords,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch rejection data' },
       { status: 500 }

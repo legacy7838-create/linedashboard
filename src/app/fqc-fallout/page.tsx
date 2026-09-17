@@ -1,103 +1,57 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DashboardFilters } from '@/components/filters/DashboardFilters';
 import { KPICard } from '@/components/ui/KPICard';
 import { Card } from '@/components/ui/Card';
-import { QualityTrendChart } from '@/components/charts/QualityTrendChart';
-import { ParetoChart } from '@/components/charts/ParetoChart';
-import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
-import { CustomerQualityChart } from '@/components/charts/ComparisonChart';
-import { PartQualityList } from '@/components/charts/HorizontalRankedChart';
+import {
+  QualityTrendChart,
+  ParetoChart,
+  GroupedBarChart,
+  CustomerQualityChart,
+  PartQualityList,
+} from '@/components/charts';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useQualityData } from '@/context/QualityDataContext';
+import { useQualityDerivations, createDefaultFilters } from '@/lib/hooks/useQualityDerivations';
 
-import {
-  calculateKPISummary,
-  calculateDailyTrend,
-  calculateParetoDefects,
-  calculateLineComparison,
-  calculateCustomerComparison,
-  calculatePartRankings,
-  extractFilterOptions,
-  filterFQCRecords,
-} from '@/lib/calculations/qualityCalculations';
 import { FilterState } from '@/types/quality';
 import { formatDate, formatNumber, formatPercent } from '@/lib/utils/formatters';
+import { NoDataState } from '@/components/ui/NoDataState';
 import { ShieldAlert, CheckCircle, Percent, UploadCloud } from 'lucide-react';
 
 export default function FQCFalloutPage() {
-  const { fqcRecords, activeMonth, dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+  const { fqcRecords, activeMonth, hasData, setIsImportModalOpen } = useQualityData();
 
-  const [filters, setFilters] = useState<FilterState>({
-    month: activeMonth,
-    startDate: '',
-    endDate: '',
-    cellOrLine: 'ALL',
-    shift: 'ALL',
-    customer: 'ALL',
-    partNumber: 'ALL',
-    machine: 'ALL',
-    searchQuery: '',
-  });
-
+  const [filters, setFilters] = useState<FilterState>(createDefaultFilters({ month: activeMonth }));
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, month: activeMonth }));
-  }, [activeMonth]);
+  const effectiveFilters = useMemo(
+    () => (filters.month === activeMonth ? filters : { ...filters, month: activeMonth }),
+    [filters, activeMonth]
+  );
 
-  const filterOptions = useMemo(() => {
-    return extractFilterOptions([], fqcRecords);
-  }, [fqcRecords]);
-
-  const filteredFqcRecords = useMemo(() => {
-    return filterFQCRecords(fqcRecords, filters);
-  }, [fqcRecords, filters]);
-
-  const kpiSummary = useMemo(() => {
-    return calculateKPISummary([], filteredFqcRecords);
-  }, [filteredFqcRecords]);
-
-  const dailyTrend = useMemo(() => {
-    return calculateDailyTrend([], filteredFqcRecords);
-  }, [filteredFqcRecords]);
-
-  const paretoDefects = useMemo(() => {
-    return calculateParetoDefects([], filteredFqcRecords);
-  }, [filteredFqcRecords]);
-
-  const lineComparison = useMemo(() => {
-    return calculateLineComparison([], filteredFqcRecords);
-  }, [filteredFqcRecords]);
-
-  const customerComparison = useMemo(() => {
-    return calculateCustomerComparison([], filteredFqcRecords);
-  }, [filteredFqcRecords]);
-
-  const partRankings = useMemo(() => {
-    return calculatePartRankings([], filteredFqcRecords);
-  }, [filteredFqcRecords]);
+  const {
+    filteredFqcRecords,
+    filterOptions,
+    kpiSummary,
+    dailyTrend,
+    paretoDefects,
+    lineComparison,
+    customerComparison,
+    partRankings,
+  } = useQualityDerivations([], fqcRecords, effectiveFilters, { includeQuality: false });
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      month: 'ALL',
-      startDate: '',
-      endDate: '',
-      cellOrLine: 'ALL',
-      shift: 'ALL',
-      customer: 'ALL',
-      partNumber: 'ALL',
-      machine: 'ALL',
-      searchQuery: '',
-    });
+    setFilters(createDefaultFilters());
+    setCurrentPage(1);
   };
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -108,7 +62,7 @@ export default function FQCFalloutPage() {
       <PageHeader
         title="Final Quality Control (FQC) Fallout Dashboard"
         subtitle="End-of-line audits, pre-dispatch inspections, and dock audit containment monitoring."
-        badgeText={dataMode === 'EXCEL_IMPORTED' ? `Excel: ${importedFileName}` : 'FQC Audit'}
+        badgeText={hasData ? 'Excel Data Loaded' : 'No Data Loaded'}
         badgeColor="purple"
         actions={
           <button
@@ -121,13 +75,21 @@ export default function FQCFalloutPage() {
         }
       />
 
-      <DashboardFilters
-        filters={filters}
-        options={filterOptions}
-        onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-        showMachineFilter={false}
-      />
+      {!hasData ? (
+        <NoDataState
+          title="No FQC Fallout Data Available"
+          message="Import an Excel workbook containing an FQC sheet to populate end-of-line audit and containment analytics."
+          onImport={() => setIsImportModalOpen(true)}
+        />
+      ) : (
+        <>
+          <DashboardFilters
+            filters={filters}
+            options={filterOptions}
+            onFilterChange={handleFilterChange}
+            onReset={handleResetFilters}
+            showMachineFilter={false}
+          />
 
       {/* KPI Cards for FQC Fallout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -323,6 +285,8 @@ export default function FQCFalloutPage() {
           </>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

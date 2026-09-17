@@ -1,114 +1,54 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DashboardFilters } from '@/components/filters/DashboardFilters';
 import { Card } from '@/components/ui/Card';
-import { QualityTrendChart } from '@/components/charts/QualityTrendChart';
-import { ParetoChart } from '@/components/charts/ParetoChart';
-import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
-import { CustomerQualityChart, ShiftQualityChart } from '@/components/charts/ComparisonChart';
-import { ProblematicMachinesList, PartQualityList } from '@/components/charts/HorizontalRankedChart';
-import { useQualityData } from '@/context/QualityDataContext';
-
 import {
-  calculateKPISummary,
-  calculateDailyTrend,
-  calculateLineComparison,
-  calculateParetoDefects,
-  calculateCustomerComparison,
-  calculateMachineRankings,
-  calculatePartRankings,
-  calculateShiftComparison,
-  extractFilterOptions,
-  filterQualityRecords,
-  filterFQCRecords,
-} from '@/lib/calculations/qualityCalculations';
+  QualityTrendChart,
+  ParetoChart,
+  GroupedBarChart,
+  CustomerQualityChart,
+  ShiftQualityChart,
+  ProblematicMachinesList,
+  PartQualityList,
+} from '@/components/charts';
+import { useQualityData } from '@/context/QualityDataContext';
+import { useQualityDerivations, createDefaultFilters } from '@/lib/hooks/useQualityDerivations';
+
 import { FilterState } from '@/types/quality';
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters';
+import { NoDataState } from '@/components/ui/NoDataState';
 import { DollarSign, UploadCloud } from 'lucide-react';
 
 export default function AnalyticsPage() {
-  const { qualityRecords, fqcRecords, activeMonth, dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+  const { qualityRecords, fqcRecords, activeMonth, hasData, setIsImportModalOpen } = useQualityData();
 
-  const [filters, setFilters] = useState<FilterState>({
-    month: activeMonth,
-    startDate: '',
-    endDate: '',
-    cellOrLine: 'ALL',
-    shift: 'ALL',
-    customer: 'ALL',
-    partNumber: 'ALL',
-    machine: 'ALL',
-    searchQuery: '',
-    type: 'ALL',
-  });
+  const [filters, setFilters] = useState<FilterState>(createDefaultFilters({ month: activeMonth }));
 
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, month: activeMonth }));
-  }, [activeMonth]);
+  const effectiveFilters = useMemo(
+    () => (filters.month === activeMonth ? filters : { ...filters, month: activeMonth }),
+    [filters, activeMonth]
+  );
 
-  const filterOptions = useMemo(() => {
-    return extractFilterOptions(qualityRecords, fqcRecords);
-  }, [qualityRecords, fqcRecords]);
-
-  const filteredQualityRecords = useMemo(() => {
-    return filterQualityRecords(qualityRecords, filters);
-  }, [qualityRecords, filters]);
-
-  const filteredFqcRecords = useMemo(() => {
-    return filterFQCRecords(fqcRecords, filters);
-  }, [fqcRecords, filters]);
-
-  const kpiSummary = useMemo(() => {
-    return calculateKPISummary(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
-
-  const dailyTrend = useMemo(() => {
-    return calculateDailyTrend(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
-
-  const lineComparison = useMemo(() => {
-    return calculateLineComparison(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
-
-  const paretoDefects = useMemo(() => {
-    return calculateParetoDefects(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
-
-  const customerComparison = useMemo(() => {
-    return calculateCustomerComparison(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
-
-  const machineRankings = useMemo(() => {
-    return calculateMachineRankings(filteredQualityRecords);
-  }, [filteredQualityRecords]);
-
-  const partRankings = useMemo(() => {
-    return calculatePartRankings(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
-
-  const shiftComparison = useMemo(() => {
-    return calculateShiftComparison(filteredQualityRecords, filteredFqcRecords);
-  }, [filteredQualityRecords, filteredFqcRecords]);
+  const {
+    filterOptions,
+    kpiSummary,
+    dailyTrend,
+    lineComparison,
+    paretoDefects,
+    customerComparison,
+    machineRankings,
+    partRankings,
+    shiftComparison,
+  } = useQualityDerivations(qualityRecords, fqcRecords, effectiveFilters);
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      month: 'ALL',
-      startDate: '',
-      endDate: '',
-      cellOrLine: 'ALL',
-      shift: 'ALL',
-      customer: 'ALL',
-      partNumber: 'ALL',
-      machine: 'ALL',
-      searchQuery: '',
-      type: 'ALL',
-    });
+    setFilters(createDefaultFilters());
   };
 
   return (
@@ -116,8 +56,8 @@ export default function AnalyticsPage() {
       <PageHeader
         title="Manufacturing Quality Analytics"
         subtitle="Deep comparative analytics, financial loss breakdowns, and cross-operational metrics."
-        badgeText={dataMode === 'EXCEL_IMPORTED' ? `Excel: ${importedFileName}` : 'Consolidated Analytics'}
-        badgeColor={dataMode === 'EXCEL_IMPORTED' ? 'emerald' : 'blue'}
+        badgeText={hasData ? 'Excel Data Loaded' : 'No Data Loaded'}
+        badgeColor={hasData ? 'emerald' : 'orange'}
         actions={
           <button
             onClick={() => setIsImportModalOpen(true)}
@@ -129,12 +69,20 @@ export default function AnalyticsPage() {
         }
       />
 
-      <DashboardFilters
-        filters={filters}
-        options={filterOptions}
-        onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-      />
+      {!hasData ? (
+        <NoDataState
+          title="No Analytics Data Available"
+          message="Import a Line Rejection / Rework / FQC Excel workbook to generate comparative analytics and financial breakdowns."
+          onImport={() => setIsImportModalOpen(true)}
+        />
+      ) : (
+        <>
+          <DashboardFilters
+            filters={filters}
+            options={filterOptions}
+            onFilterChange={handleFilterChange}
+            onReset={handleResetFilters}
+          />
 
       {/* Cost & Volume Metric Callouts */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -288,6 +236,8 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </Card>
+        </>
+      )}
     </div>
   );
 }

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       count: fqcRecords.length,
       records: fqcRecords,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch FQC data' },
       { status: 500 }

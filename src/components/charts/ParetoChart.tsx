@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -13,38 +13,54 @@ import {
   Legend,
 } from 'recharts';
 import { ParetoItem } from '@/types/quality';
+import {
+  CHART_TOOLTIP_STYLE,
+  CHART_LEGEND_WRAPPER_STYLE,
+  CHART_GRID_STROKE,
+  CHART_AXIS_STROKE,
+  CHART_AXIS_LINE,
+  CHART_EMPTY_CLASS,
+} from './chartStyles';
 
 interface ParetoChartProps {
   data: ParetoItem[];
   height?: number;
 }
 
-export function ParetoChart({ data, height = 280 }: ParetoChartProps) {
+const MARGIN = { top: 10, right: 20, left: -15, bottom: 35 };
+
+function ParetoChartImpl({ data, height = 280 }: ParetoChartProps) {
+  // Display top 8 defects for maximum clarity
+  const displayData = useMemo(() => data.slice(0, 8), [data]);
+
+  const formatTooltip = useCallback(
+    (value: unknown, name: unknown): [string | number, string] => {
+      const label = String(name);
+      if (label === 'Cumulative %') return [`${value}%`, label];
+      return [value as string | number, label];
+    },
+    []
+  );
+
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-xs text-slate-400 font-medium">
+      <div className={CHART_EMPTY_CLASS}>
         No defect Pareto data available.
       </div>
     );
   }
 
-  // Display top 8 defects for maximum clarity
-  const displayData = data.slice(0, 8);
-
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart
-          data={displayData}
-          margin={{ top: 10, right: 20, left: -15, bottom: 35 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+        <ComposedChart data={displayData} margin={MARGIN}>
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="defect"
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
-            axisLine={{ stroke: '#E2E8F0' }}
+            axisLine={CHART_AXIS_LINE}
             interval={0}
             angle={-20}
             textAnchor="end"
@@ -52,7 +68,7 @@ export function ParetoChart({ data, height = 280 }: ParetoChartProps) {
           {/* Left Axis: Defect Quantity */}
           <YAxis
             yAxisId="left"
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
             axisLine={false}
@@ -63,33 +79,20 @@ export function ParetoChart({ data, height = 280 }: ParetoChartProps) {
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="#94A3B8"
+            stroke={CHART_AXIS_STROKE}
             fontSize={11}
             tickLine={false}
             axisLine={false}
             domain={[0, 100]}
             unit="%"
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#0F172A',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#F8FAFC',
-              fontSize: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            }}
-            formatter={(value: any, name: any) => {
-              if (name === 'Cumulative %') return [`${value}%`, name];
-              return [value, name];
-            }}
-          />
+          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={formatTooltip} />
           <Legend
             verticalAlign="top"
             align="right"
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: '11px', paddingBottom: '10px' }}
+            wrapperStyle={CHART_LEGEND_WRAPPER_STYLE}
           />
           <Bar
             yAxisId="left"
@@ -113,3 +116,5 @@ export function ParetoChart({ data, height = 280 }: ParetoChartProps) {
     </div>
   );
 }
+
+export const ParetoChart = React.memo(ParetoChartImpl);

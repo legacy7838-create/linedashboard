@@ -1,5 +1,19 @@
-import * as XLSX from 'xlsx';
+import type * as XLSXType from 'xlsx';
 import { QualityRecord, FQCRecord, QualityType } from '@/types/quality';
+
+type XLSXModule = typeof XLSXType;
+
+/** A raw cell value as read from a worksheet. */
+export type ExcelCell = string | number | boolean | Date | null | undefined;
+
+// xlsx is loaded on demand so it stays out of the initial client bundle.
+let xlsxPromise: Promise<XLSXModule> | null = null;
+function loadXLSX(): Promise<XLSXModule> {
+  if (!xlsxPromise) {
+    xlsxPromise = import('xlsx');
+  }
+  return xlsxPromise;
+}
 
 export interface ExcelImportResult {
   fileName: string;
@@ -20,7 +34,18 @@ export interface ExcelImportResult {
   };
 }
 
-export function parseExcelDate(val: any): string {
+/** Maximum accepted upload size (10 MB). */
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/** Maximum worksheet rows processed per sheet, to bound parse time and memory. */
+export const MAX_ROWS_PER_SHEET = 20000;
+
+/** Maximum worksheets processed per workbook. */
+export const MAX_SHEETS_PER_WORKBOOK = 50;
+
+export class ExcelImportError extends Error {}
+
+export function parseExcelDate(val: ExcelCell, XLSX: XLSXModule): string {
   if (!val) return new Date().toISOString().split('T')[0];
   
   if (typeof val === 'string') {
@@ -74,12 +99,20 @@ export function deriveMonthString(dateStr: string): string {
 }
 
 function parseSingleSheet(
-  sheet: XLSX.WorkSheet,
+  sheet: XLSXType.WorkSheet,
   sheetName: string,
-  defaultType: QualityType
+  defaultType: QualityType,
+  XLSX: XLSXModule
 ): { records: QualityRecord[]; fqcRecords: FQCRecord[] } {
-  const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+  const rows = XLSX.utils.sheet_to_json<ExcelCell[]>(sheet, { header: 1 });
   if (!rows || rows.length < 4) return { records: [], fqcRecords: [] };
+
+  // Bound the work done per sheet so a crafted workbook cannot exhaust the tab.
+  if (rows.length > MAX_ROWS_PER_SHEET) {
+    throw new ExcelImportError(
+      `Sheet "${sheetName}" has ${rows.length} rows, which exceeds the ${MAX_ROWS_PER_SHEET}-row limit.`
+    );
+  }
 
   // Find header row: look for 'part no' or 'm/c' or 'non conformance' or 'sr no'
   let headerRowIdx = -1;
@@ -133,7 +166,7 @@ function parseSingleSheet(
     const partNo = idxPartNo >= 0 && row[idxPartNo] != null ? String(row[idxPartNo]).trim() : '';
     const defect = idxDefect >= 0 && row[idxDefect] != null ? String(row[idxDefect]).trim() : '';
     const rawDate = idxDate >= 0 ? row[idxDate] : '';
-    const dateStr = parseExcelDate(rawDate);
+    const dateStr = parseExcelDate(rawDate, XLSX);
     const monthStr = deriveMonthString(dateStr);
 
     const customer = idxCustomer >= 0 && row[idxCustomer] ? String(row[idxCustomer]).trim() : 'RE (Royal Enfield)';
@@ -235,12 +268,19 @@ function parseSingleSheet(
 }
 
 export function parseExcelWorkbook(
-  workbook: XLSX.WorkBook,
-  fileName: string
+  workbook: XLSXType.WorkBook,
+  fileName: string,
+  XLSX: XLSXModule
 ): ExcelImportResult {
   const allQualityRecords: QualityRecord[] = [];
   const allFqcRecords: FQCRecord[] = [];
   const parsedSheetNames: string[] = [];
+
+  if (workbook.SheetNames.length > MAX_SHEETS_PER_WORKBOOK) {
+    throw new ExcelImportError(
+      `Workbook has ${workbook.SheetNames.length} sheets, which exceeds the ${MAX_SHEETS_PER_WORKBOOK}-sheet limit.`
+    );
+  }
 
   workbook.SheetNames.forEach(sheetName => {
     const lowerName = sheetName.toLowerCase();
@@ -263,7 +303,7 @@ export function parseExcelWorkbook(
       sheetType = 'REJECTION';
     }
 
-    const { records, fqcRecords } = parseSingleSheet(sheet, sheetName, sheetType);
+    const { records, fqcRecords } = parseSingleSheet(sheet, sheetName, sheetType, XLSX);
     if (records.length > 0 || fqcRecords.length > 0) {
       allQualityRecords.push(...records);
       allFqcRecords.push(...fqcRecords);
@@ -307,7 +347,14 @@ export function parseExcelWorkbook(
 }
 
 export async function parseUploadedExcelFile(file: File): Promise<ExcelImportResult> {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new ExcelImportError(
+      `File is ${(file.size / (1024 * 1024)).toFixed(1)} MB, which exceeds the ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB limit.`
+    );
+  }
+
   const arrayBuffer = await file.arrayBuffer();
+  const XLSX = await loadXLSX();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-  return parseExcelWorkbook(workbook, file.name);
+  return parseExcelWorkbook(workbook, file.name, XLSX);
 }

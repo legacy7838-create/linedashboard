@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { MachineRankingItem, PartRankingItem } from '@/types/quality';
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters';
 import { Cpu, Package } from 'lucide-react';
@@ -10,8 +10,12 @@ interface ProblematicMachinesProps {
   limit?: number;
 }
 
-export function ProblematicMachinesList({ machines, limit = 5 }: ProblematicMachinesProps) {
-  const displayMachines = machines.slice(0, limit);
+function ProblematicMachinesListImpl({ machines, limit = 5 }: ProblematicMachinesProps) {
+  const displayMachines = useMemo(() => machines.slice(0, limit), [machines, limit]);
+  const maxIssues = useMemo(
+    () => Math.max(...displayMachines.map(m => m.issueQuantity), 1),
+    [displayMachines]
+  );
 
   if (!displayMachines || displayMachines.length === 0) {
     return (
@@ -20,8 +24,6 @@ export function ProblematicMachinesList({ machines, limit = 5 }: ProblematicMach
       </div>
     );
   }
-
-  const maxIssues = Math.max(...displayMachines.map(m => m.issueQuantity), 1);
 
   return (
     <div className="space-y-3">
@@ -79,8 +81,8 @@ interface PartIssuesProps {
   limit?: number;
 }
 
-export function PartQualityList({ parts, limit = 5 }: PartIssuesProps) {
-  const displayParts = parts.slice(0, limit);
+function PartQualityListImpl({ parts, limit = 5 }: PartIssuesProps) {
+  const displayParts = useMemo(() => parts.slice(0, limit), [parts, limit]);
 
   if (!displayParts || displayParts.length === 0) {
     return (
@@ -133,3 +135,6 @@ export function PartQualityList({ parts, limit = 5 }: PartIssuesProps) {
     </div>
   );
 }
+
+export const ProblematicMachinesList = React.memo(ProblematicMachinesListImpl);
+export const PartQualityList = React.memo(PartQualityListImpl);

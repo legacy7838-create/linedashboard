@@ -1,20 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { QualityRecord, FQCRecord } from '@/types/quality';
-import { DUMMY_QUALITY_RECORDS, DUMMY_FQC_RECORDS } from '@/data/dummyQualityData';
-import { parseUploadedExcelFile, ExcelImportResult } from '@/lib/services/excelParser';
+import type { ExcelImportResult } from '@/lib/services/excelParser';
 
 interface QualityDataContextType {
   qualityRecords: QualityRecord[];
   fqcRecords: FQCRecord[];
-  dataMode: 'SAMPLE_DATA' | 'EXCEL_IMPORTED';
+  /** False until a workbook has been imported in this session. */
+  hasData: boolean;
   importedFileName: string | null;
   importSummary: ExcelImportResult['summary'] | null;
   activeMonth: string;
   setActiveMonth: (month: string) => void;
   importExcelFile: (file: File) => Promise<ExcelImportResult>;
-  resetToSampleData: () => void;
+  clearData: () => void;
   isImportModalOpen: boolean;
   setIsImportModalOpen: (open: boolean) => void;
 }
@@ -22,45 +22,40 @@ interface QualityDataContextType {
 const QualityDataContext = createContext<QualityDataContextType | undefined>(undefined);
 
 export function QualityDataProvider({ children }: { children: React.ReactNode }) {
-  const [qualityRecords, setQualityRecords] = useState<QualityRecord[]>(DUMMY_QUALITY_RECORDS);
-  const [fqcRecords, setFqcRecords] = useState<FQCRecord[]>(DUMMY_FQC_RECORDS);
-  const [dataMode, setDataMode] = useState<'SAMPLE_DATA' | 'EXCEL_IMPORTED'>('SAMPLE_DATA');
+  const [qualityRecords, setQualityRecords] = useState<QualityRecord[]>([]);
+  const [fqcRecords, setFqcRecords] = useState<FQCRecord[]>([]);
   const [importedFileName, setImportedFileName] = useState<string | null>(null);
   const [importSummary, setImportSummary] = useState<ExcelImportResult['summary'] | null>(null);
-  const [activeMonth, setActiveMonth] = useState<string>('Sep-2026');
+  const [activeMonth, setActiveMonth] = useState<string>('ALL');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const importExcelFile = async (file: File): Promise<ExcelImportResult> => {
-    try {
-      const result = await parseUploadedExcelFile(file);
-      if (result.qualityRecords.length === 0 && result.fqcRecords.length === 0) {
-        throw new Error('No valid quality or rejection/rework records found in this Excel file.');
-      }
+    // Loaded on demand so the parser (and xlsx) stay out of the initial bundle.
+    const { parseUploadedExcelFile } = await import('@/lib/services/excelParser');
+    const result = await parseUploadedExcelFile(file);
 
-      setQualityRecords(result.qualityRecords);
-      setFqcRecords(result.fqcRecords);
-      setDataMode('EXCEL_IMPORTED');
-      setImportedFileName(result.fileName);
-      setImportSummary(result.summary);
-
-      if (result.summary.months.length > 0) {
-        setActiveMonth(result.summary.months[0]);
-      }
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to parse excel file:', error);
-      throw error;
+    if (result.qualityRecords.length === 0 && result.fqcRecords.length === 0) {
+      throw new Error(
+        'No valid rejection, rework, or FQC records were found in this workbook. ' +
+          'Check that your sheets contain the expected Part No / Machine / Non-Conformance columns.'
+      );
     }
+
+    setQualityRecords(result.qualityRecords);
+    setFqcRecords(result.fqcRecords);
+    setImportedFileName(result.fileName);
+    setImportSummary(result.summary);
+    setActiveMonth(result.summary.months.length > 0 ? result.summary.months[0] : 'ALL');
+
+    return result;
   };
 
-  const resetToSampleData = () => {
-    setQualityRecords(DUMMY_QUALITY_RECORDS);
-    setFqcRecords(DUMMY_FQC_RECORDS);
-    setDataMode('SAMPLE_DATA');
+  const clearData = () => {
+    setQualityRecords([]);
+    setFqcRecords([]);
     setImportedFileName(null);
     setImportSummary(null);
-    setActiveMonth('Sep-2026');
+    setActiveMonth('ALL');
   };
 
   return (
@@ -68,13 +63,13 @@ export function QualityDataProvider({ children }: { children: React.ReactNode })
       value={{
         qualityRecords,
         fqcRecords,
-        dataMode,
+        hasData: qualityRecords.length > 0 || fqcRecords.length > 0,
         importedFileName,
         importSummary,
         activeMonth,
         setActiveMonth,
         importExcelFile,
-        resetToSampleData,
+        clearData,
         isImportModalOpen,
         setIsImportModalOpen,
       }}

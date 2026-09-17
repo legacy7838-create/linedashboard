@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       records: qualityRecords,
       fqcRecords,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch quality data' },
       { status: 500 }
