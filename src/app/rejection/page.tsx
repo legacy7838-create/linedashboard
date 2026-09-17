@@ -1,0 +1,244 @@
+'use client';
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { DashboardFilters } from '@/components/filters/DashboardFilters';
+import { KPICard } from '@/components/ui/KPICard';
+import { Card } from '@/components/ui/Card';
+import { QualityTrendChart } from '@/components/charts/QualityTrendChart';
+import { ParetoChart } from '@/components/charts/ParetoChart';
+import { CustomerQualityChart } from '@/components/charts/ComparisonChart';
+import { ProblematicMachinesList, PartQualityList } from '@/components/charts/HorizontalRankedChart';
+import { QualityTable } from '@/components/tables/QualityTable';
+import { useQualityData } from '@/context/QualityDataContext';
+
+import {
+  calculateKPISummary,
+  calculateDailyTrend,
+  calculateParetoDefects,
+  calculateCustomerComparison,
+  calculateMachineRankings,
+  calculatePartRankings,
+  extractFilterOptions,
+  filterQualityRecords,
+} from '@/lib/calculations/qualityCalculations';
+import { FilterState } from '@/types/quality';
+import { formatCurrency, formatNumber, formatPercent } from '@/lib/utils/formatters';
+import { XCircle, DollarSign, Percent, UploadCloud } from 'lucide-react';
+
+export default function RejectionPage() {
+  const { qualityRecords, activeMonth, dataMode, importedFileName, setIsImportModalOpen } = useQualityData();
+
+  const [filters, setFilters] = useState<FilterState>({
+    month: activeMonth,
+    startDate: '',
+    endDate: '',
+    cellOrLine: 'ALL',
+    shift: 'ALL',
+    customer: 'ALL',
+    partNumber: 'ALL',
+    machine: 'ALL',
+    searchQuery: '',
+    type: 'REJECTION',
+  });
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, month: activeMonth }));
+  }, [activeMonth]);
+
+  const filterOptions = useMemo(() => {
+    return extractFilterOptions(qualityRecords);
+  }, [qualityRecords]);
+
+  const rejectionRecords = useMemo(() => {
+    return filterQualityRecords(qualityRecords, { ...filters, type: 'REJECTION' });
+  }, [qualityRecords, filters]);
+
+  const kpiSummary = useMemo(() => {
+    return calculateKPISummary(rejectionRecords, []);
+  }, [rejectionRecords]);
+
+  const dailyTrend = useMemo(() => {
+    return calculateDailyTrend(rejectionRecords, []);
+  }, [rejectionRecords]);
+
+  const paretoDefects = useMemo(() => {
+    return calculateParetoDefects(rejectionRecords, []);
+  }, [rejectionRecords]);
+
+  const customerComparison = useMemo(() => {
+    return calculateCustomerComparison(rejectionRecords, []);
+  }, [rejectionRecords]);
+
+  const machineRankings = useMemo(() => {
+    return calculateMachineRankings(rejectionRecords);
+  }, [rejectionRecords]);
+
+  const partRankings = useMemo(() => {
+    return calculatePartRankings(rejectionRecords, []);
+  }, [rejectionRecords]);
+
+  const handleFilterChange = (newFilters: Partial<FilterState>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      month: 'ALL',
+      startDate: '',
+      endDate: '',
+      cellOrLine: 'ALL',
+      shift: 'ALL',
+      customer: 'ALL',
+      partNumber: 'ALL',
+      machine: 'ALL',
+      searchQuery: '',
+      type: 'REJECTION',
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Line Rejection Dashboard"
+        subtitle="Dedicated root cause monitoring, scrap cost analytics, and machine non-conformance tracking."
+        badgeText={dataMode === 'EXCEL_IMPORTED' ? `Excel: ${importedFileName}` : 'Critical Scrap'}
+        badgeColor="red"
+        actions={
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+          >
+            <UploadCloud className="w-4 h-4" />
+            <span>Import Excel</span>
+          </button>
+        }
+      />
+
+      <DashboardFilters
+        filters={filters}
+        options={filterOptions}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
+      />
+
+      {/* KPI Cards for Rejection */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <KPICard
+          title="Total Rejection Qty"
+          categoryBadge="Scrapped Units"
+          icon={XCircle}
+          accentColor="red"
+          primaryLabel="Total Volume"
+          primaryValue={`${formatNumber(kpiSummary.totalRejectionQty)} pcs`}
+          metrics={[
+            {
+              label: 'Scrap Events',
+              value: `${rejectionRecords.length} records`,
+            },
+            {
+              label: 'Avg per Incident',
+              value: rejectionRecords.length > 0 
+                ? `${(kpiSummary.totalRejectionQty / rejectionRecords.length).toFixed(1)} pcs`
+                : '0 pcs',
+            }
+          ]}
+        />
+
+        <KPICard
+          title="Total Rejection Cost"
+          categoryBadge="Financial Scrap Impact"
+          icon={DollarSign}
+          accentColor="red"
+          primaryLabel="Scrap Value Loss"
+          primaryValue={formatCurrency(kpiSummary.totalRejectionCost)}
+          metrics={[
+            {
+              label: 'Direct Material Loss',
+              value: formatCurrency(kpiSummary.totalRejectionCost),
+              highlight: true,
+            },
+            {
+              label: 'Avg Loss / Scrap Unit',
+              value: kpiSummary.totalRejectionQty > 0
+                ? formatCurrency(kpiSummary.totalRejectionCost / kpiSummary.totalRejectionQty)
+                : '₹0',
+            }
+          ]}
+        />
+
+        <KPICard
+          title="Average Loss Per Piece"
+          categoryBadge="Unit Impact"
+          icon={Percent}
+          accentColor="red"
+          primaryLabel="Avg Cost / Scrapped Pc"
+          primaryValue={
+            kpiSummary.totalRejectionQty > 0
+              ? formatCurrency(kpiSummary.totalRejectionCost / kpiSummary.totalRejectionQty)
+              : '₹0'
+          }
+          metrics={[
+            {
+              label: 'Total Material Loss',
+              value: formatCurrency(kpiSummary.totalRejectionCost),
+              highlight: true,
+            },
+            {
+              label: 'Total Scrapped Pcs',
+              value: `${formatNumber(kpiSummary.totalRejectionQty)} pcs`,
+            },
+          ]}
+        />
+      </div>
+
+      {/* Visual Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card
+          title="Daily Rejection Trend"
+          subtitle="Daily volume of scrapped parts across selected timeline"
+        >
+          <QualityTrendChart data={dailyTrend} showRejection={true} showRework={false} showFqc={false} />
+        </Card>
+
+        <Card
+          title="Top Non-Conformance in Rejection (Pareto)"
+          subtitle="Pareto analysis of defect categories resulting in scrap"
+        >
+          <ParetoChart data={paretoDefects} />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card
+          title="Machine-Wise Rejection"
+          subtitle="Top stations contributing to scrap"
+        >
+          <ProblematicMachinesList machines={machineRankings} limit={5} />
+        </Card>
+
+        <Card
+          title="Part-Wise Rejection"
+          subtitle="Components with highest scrap"
+        >
+          <PartQualityList parts={partRankings} limit={5} />
+        </Card>
+
+        <Card
+          title="Customer-Wise Rejection"
+          subtitle="Scrap impact per customer line"
+        >
+          <CustomerQualityChart data={customerComparison} />
+        </Card>
+      </div>
+
+      {/* Detailed Rejection Records Table */}
+      <QualityTable
+        records={rejectionRecords}
+        title="Detailed Line Rejection Log"
+        subtitle="Individual scrapped records with tooling root cause and action taken"
+        onResetFilters={handleResetFilters}
+      />
+    </div>
+  );
+}
