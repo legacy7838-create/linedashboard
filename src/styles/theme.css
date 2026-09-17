@@ -1,0 +1,42 @@
+:root {
+  /* Background */
+  --bg-primary: #0C0C0C;
+  --bg-secondary: #111111;
+  --bg-card: #141414;
+  --bg-sidebar: #080808;
+
+  /* Primary Theme */
+  --primary: #FF7900;
+  --primary-hover: #FF8C1A;
+  --primary-dark: #CC6100;
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A6A6A6;
+  --text-muted: #707070;
+
+  /* Borders */
+  --border-color: #242424;
+
+  /* Status */
+  --success: #32C759;
+  --danger: #FF453A;
+  --warning: #FF9F0A;
+
+  /* Chart / Glow */
+  --orange-glow: rgba(255, 121, 0, 0.25);
+  --green-glow: rgba(50, 199, 89, 0.20);
+}
+
+/* Custom glow utility helpers */
+.glow-orange {
+  box-shadow: 0 0 20px var(--orange-glow);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+.glow-orange-sm {
+  box-shadow: 0 0 10px var(--orange-glow);
+}

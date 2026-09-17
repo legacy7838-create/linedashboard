@@ -98,7 +98,7 @@ function ParetoChartImpl({ data, height = 280 }: ParetoChartProps) {
             yAxisId="left"
             dataKey="quantity"
             name="Defect Qty"
-            fill="#2563EB"
+            fill="#FF7900"
             radius={[4, 4, 0, 0]}
             maxBarSize={32}
           />
@@ -107,9 +107,9 @@ function ParetoChartImpl({ data, height = 280 }: ParetoChartProps) {
             type="monotone"
             dataKey="cumulativePercentage"
             name="Cumulative %"
-            stroke="#DC2626"
+            stroke="#32C759"
             strokeWidth={2.5}
-            dot={{ r: 3, fill: '#DC2626' }}
+            dot={{ r: 3, fill: '#32C759' }}
           />
         </ComposedChart>
       </ResponsiveContainer>

@@ -31,39 +31,39 @@ export function KPICard({
 }: KPICardProps) {
   const accentStyles = {
     red: {
-      borderTop: 'border-t-4 border-t-red-600',
-      iconBg: 'bg-red-50 text-red-600 border-red-200',
-      badge: 'bg-red-50 text-red-700 border-red-200',
-      primaryText: 'text-red-700',
-      subMetricHighlight: 'text-red-700',
+      borderTop: 'border-t-4 border-t-[#FF453A]',
+      iconBg: 'bg-[#FF453A]/15 text-[#FF453A] border-[#FF453A]/30',
+      badge: 'bg-[#FF453A]/15 text-[#FF453A] border-[#FF453A]/30',
+      primaryText: 'text-[#FF453A]',
+      subMetricHighlight: 'text-[#FF453A]',
     },
     orange: {
-      borderTop: 'border-t-4 border-t-orange-500',
-      iconBg: 'bg-orange-50 text-orange-600 border-orange-200',
-      badge: 'bg-orange-50 text-orange-700 border-orange-200',
-      primaryText: 'text-orange-700',
-      subMetricHighlight: 'text-orange-700',
+      borderTop: 'border-t-4 border-t-[#FF7900]',
+      iconBg: 'bg-[#FF7900]/15 text-[#FF8C1A] border-[#FF7900]/30',
+      badge: 'bg-[#FF7900]/15 text-[#FF8C1A] border-[#FF7900]/30',
+      primaryText: 'text-[#FF8C1A]',
+      subMetricHighlight: 'text-[#FF8C1A]',
     },
     purple: {
-      borderTop: 'border-t-4 border-t-purple-600',
-      iconBg: 'bg-purple-50 text-purple-600 border-purple-200',
-      badge: 'bg-purple-50 text-purple-700 border-purple-200',
-      primaryText: 'text-purple-700',
-      subMetricHighlight: 'text-purple-700',
+      borderTop: 'border-t-4 border-t-[#A78BFA]',
+      iconBg: 'bg-[#A78BFA]/15 text-[#C4B5FD] border-[#A78BFA]/30',
+      badge: 'bg-[#A78BFA]/15 text-[#C4B5FD] border-[#A78BFA]/30',
+      primaryText: 'text-[#C4B5FD]',
+      subMetricHighlight: 'text-[#C4B5FD]',
     },
     blue: {
-      borderTop: 'border-t-4 border-t-blue-600',
-      iconBg: 'bg-blue-50 text-blue-600 border-blue-200',
-      badge: 'bg-blue-50 text-blue-700 border-blue-200',
-      primaryText: 'text-blue-700',
-      subMetricHighlight: 'text-blue-700',
+      borderTop: 'border-t-4 border-t-[#FF7900]',
+      iconBg: 'bg-[#FF7900]/15 text-[#FF8C1A] border-[#FF7900]/30',
+      badge: 'bg-[#FF7900]/15 text-[#FF8C1A] border-[#FF7900]/30',
+      primaryText: 'text-[#FFFFFF]',
+      subMetricHighlight: 'text-[#FF7900]',
     },
     slate: {
-      borderTop: 'border-t-4 border-t-slate-700',
-      iconBg: 'bg-slate-100 text-slate-700 border-slate-200',
-      badge: 'bg-slate-100 text-slate-700 border-slate-200',
-      primaryText: 'text-slate-800',
-      subMetricHighlight: 'text-slate-900',
+      borderTop: 'border-t-4 border-t-[#707070]',
+      iconBg: 'bg-[#1F1F1F] text-[#A6A6A6] border-[#242424]',
+      badge: 'bg-[#1F1F1F] text-[#A6A6A6] border-[#242424]',
+      primaryText: 'text-[#FFFFFF]',
+      subMetricHighlight: 'text-[#FFFFFF]',
     },
   };
 
@@ -71,13 +71,13 @@ export function KPICard({
 
   return (
     <div
-      className={`bg-white rounded-xl border border-slate-200 shadow-xs p-5 flex flex-col justify-between transition-all hover:shadow-md ${style.borderTop}`}
+      className={`bg-[#141414] rounded-xl border border-[#242424] shadow-md shadow-black/40 p-5 flex flex-col justify-between transition-all hover:border-[#FF7900]/40 ${style.borderTop}`}
     >
       {/* Card Header */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-600">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-[#A6A6A6]">
               {title}
             </h3>
             {categoryBadge && (
@@ -89,7 +89,7 @@ export function KPICard({
             )}
           </div>
           <div className="mt-2">
-            <span className="text-xs text-slate-400 font-medium block">
+            <span className="text-xs text-[#707070] font-medium block">
               {primaryLabel}
             </span>
             <div className={`text-2xl font-black tracking-tight ${style.primaryText}`}>
@@ -105,8 +105,8 @@ export function KPICard({
 
       {/* Secondary Metrics Section */}
       {metrics.length === 1 ? (
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500">
+        <div className="pt-3 border-t border-[#242424] flex items-center justify-between">
+          <span className="text-xs font-semibold text-[#A6A6A6]">
             {metrics[0].label}
           </span>
           <span className={`text-base font-extrabold ${style.subMetricHighlight}`}>
@@ -114,21 +114,21 @@ export function KPICard({
           </span>
         </div>
       ) : (
-        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-3">
+        <div className="pt-3 border-t border-[#242424] grid grid-cols-2 gap-3">
           {metrics.map((m, idx) => (
             <div key={idx} className="flex flex-col">
-              <span className="text-[11px] font-medium text-slate-400">
+              <span className="text-[11px] font-medium text-[#707070]">
                 {m.label}
               </span>
               <span
                 className={`text-sm font-bold ${
-                  m.highlight ? 'text-slate-900' : 'text-slate-700'
+                  m.highlight ? 'text-[#FFFFFF]' : 'text-[#A6A6A6]'
                 }`}
               >
                 {m.value}
               </span>
               {m.subtext && (
-                <span className="text-[10px] text-slate-400 mt-0.5">{m.subtext}</span>
+                <span className="text-[10px] text-[#707070] mt-0.5">{m.subtext}</span>
               )}
             </div>
           ))}
@@ -136,7 +136,7 @@ export function KPICard({
       )}
 
       {footerNote && (
-        <div className="mt-3 pt-2 text-[10px] text-slate-400 border-t border-dashed border-slate-100 flex items-center justify-between">
+        <div className="mt-3 pt-2 text-[10px] text-[#707070] border-t border-dashed border-[#242424] flex items-center justify-between">
           <span>{footerNote}</span>
         </div>
       )}

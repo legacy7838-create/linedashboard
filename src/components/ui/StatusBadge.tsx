@@ -14,9 +14,9 @@ export function StatusBadge({ type, size = 'md' }: StatusBadgeProps) {
   if (normalizedType === 'REJECTION') {
     return (
       <span
-        className={`inline-flex items-center font-bold tracking-wide rounded-md border bg-red-50 text-red-700 border-red-200 uppercase ${sizeClasses}`}
+        className={`inline-flex items-center font-bold tracking-wide rounded-md border bg-[#FF453A]/15 text-[#FF453A] border-[#FF453A]/30 uppercase ${sizeClasses}`}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-red-600 mr-1.5"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF453A] mr-1.5"></span>
         Rejection
       </span>
     );
@@ -25,9 +25,9 @@ export function StatusBadge({ type, size = 'md' }: StatusBadgeProps) {
   if (normalizedType === 'REWORK') {
     return (
       <span
-        className={`inline-flex items-center font-bold tracking-wide rounded-md border bg-orange-50 text-orange-800 border-orange-200 uppercase ${sizeClasses}`}
+        className={`inline-flex items-center font-bold tracking-wide rounded-md border bg-[#FF7900]/15 text-[#FF8C1A] border-[#FF7900]/30 uppercase ${sizeClasses}`}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1.5"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF7900] mr-1.5"></span>
         Rework
       </span>
     );
@@ -36,9 +36,9 @@ export function StatusBadge({ type, size = 'md' }: StatusBadgeProps) {
   if (normalizedType === 'FQC_FALLOUT' || normalizedType === 'FQC FALLOUT' || normalizedType === 'FQC') {
     return (
       <span
-        className={`inline-flex items-center font-bold tracking-wide rounded-md border bg-purple-50 text-purple-700 border-purple-200 uppercase ${sizeClasses}`}
+        className={`inline-flex items-center font-bold tracking-wide rounded-md border bg-[#A78BFA]/15 text-[#C4B5FD] border-[#A78BFA]/30 uppercase ${sizeClasses}`}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-purple-600 mr-1.5"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] mr-1.5"></span>
         FQC Fallout
       </span>
     );
@@ -46,7 +46,7 @@ export function StatusBadge({ type, size = 'md' }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center font-semibold rounded-md border bg-slate-100 text-slate-700 border-slate-200 ${sizeClasses}`}
+      className={`inline-flex items-center font-semibold rounded-md border bg-[#141414] text-[#A6A6A6] border-[#242424] ${sizeClasses}`}
     >
       {type}
     </span>

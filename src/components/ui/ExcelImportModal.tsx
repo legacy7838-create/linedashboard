@@ -92,29 +92,29 @@ export function ExcelImportModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
+        className="bg-[#141414] rounded-2xl shadow-2xl border border-[#242424] max-w-2xl w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-[#0B132B] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#080808] border-b border-[#242424] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-blue-600 text-white shadow-sm">
+            <div className="p-2 rounded-lg bg-[#FF7900] text-white shadow-md shadow-[#FF7900]/25">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-sm tracking-wide">
+              <h3 className="font-extrabold text-sm tracking-wide text-[#FFFFFF]">
                 Import Manufacturing Excel File
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[#A6A6A6]">
                 Upload company Line Rejection / Rework Excel workbook to update live dashboard
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-[#A6A6A6] hover:text-[#FFFFFF] hover:bg-[#1F1F1F] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -123,14 +123,14 @@ export function ExcelImportModal() {
         {/* Modal Content */}
         <div className="p-6 space-y-5">
           {/* Active Data Mode Banner */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#111111] border border-[#242424] text-xs">
             <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">Active Data Source:</span>
+              <span className="text-[#A6A6A6] font-medium">Active Data Source:</span>
               <span
-                className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
+                className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] border ${
                   hasData
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    ? 'bg-[#32C759]/15 text-[#32C759] border-[#32C759]/30'
+                    : 'bg-[#FF9F0A]/15 text-[#FF9F0A] border-[#FF9F0A]/30'
                 }`}
               >
                 {hasData ? `Excel: ${importedFileName}` : 'No Data Loaded'}
@@ -143,7 +143,7 @@ export function ExcelImportModal() {
                   clearData();
                   setPreviewResult(null);
                 }}
-                className="flex items-center gap-1 text-slate-600 hover:text-red-600 font-semibold text-[11px] transition-colors"
+                className="flex items-center gap-1 text-[#A6A6A6] hover:text-[#FF453A] font-semibold text-[11px] transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Clear Imported Data</span>
@@ -159,8 +159,8 @@ export function ExcelImportModal() {
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${
               isDragging
-                ? 'border-blue-500 bg-blue-50/70 scale-[1.01]'
-                : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
+                ? 'border-[#FF7900] bg-[#FF7900]/10 scale-[1.01]'
+                : 'border-[#242424] bg-[#0C0C0C] hover:border-[#FF7900]/60 hover:bg-[#111111]'
             }`}
           >
             <input
@@ -171,82 +171,82 @@ export function ExcelImportModal() {
               className="hidden"
             />
 
-            <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mb-3 shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 flex items-center justify-center mb-3 shadow-md shadow-[#FF7900]/15">
               <Upload className="w-6 h-6" />
             </div>
 
-            <h4 className="text-sm font-bold text-slate-800">
+            <h4 className="text-sm font-bold text-[#FFFFFF]">
               {isProcessing ? 'Processing Excel File...' : 'Click to Upload or Drag & Drop Excel File'}
             </h4>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm">
-              Supports <strong className="text-slate-700">.xlsx</strong> and{' '}
-              <strong className="text-slate-700">.xls</strong> workbooks containing Rejection, Rework, or FQC sheets (e.g. <span className="font-mono text-blue-600 text-[11px]">RE Hard Rejection Sept-2026.xlsx</span>). Maximum file size 10 MB.
+            <p className="text-xs text-[#A6A6A6] mt-1 max-w-sm">
+              Supports <strong className="text-[#FFFFFF]">.xlsx</strong> and{' '}
+              <strong className="text-[#FFFFFF]">.xls</strong> workbooks containing Rejection, Rework, or FQC sheets (e.g. <span className="font-mono text-[#FF8C1A] text-[11px]">RE Hard Rejection Sept-2026.xlsx</span>). Maximum file size 10 MB.
             </p>
 
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold bg-[#141414] text-[#A6A6A6] border border-[#242424]">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF7900]" />
               <span>Auto-detects Shifts, Defects, Machines, Rates & Costs</span>
             </div>
           </div>
 
           {/* Error message */}
           {errorMessage && (
-            <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+            <div className="p-3.5 rounded-lg bg-[#FF453A]/15 border border-[#FF453A]/30 text-xs text-[#FF453A] flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-[#FF453A] mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Success / Parsed Summary Preview */}
           {(previewResult || importSummary) && (
-            <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-3">
+            <div className="p-4 rounded-xl bg-[#111111] border border-[#242424] text-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span className="font-bold text-emerald-900">
+                  <CheckCircle2 className="w-4 h-4 text-[#32C759]" />
+                  <span className="font-bold text-[#FFFFFF]">
                     Workbook Successfully Parsed: {previewResult?.fileName || importedFileName}
                   </span>
                 </div>
-                <span className="font-extrabold text-emerald-800 px-2 py-0.5 bg-emerald-100 rounded text-[11px]">
+                <span className="font-extrabold text-[#32C759] px-2.5 py-0.5 bg-[#32C759]/15 border border-[#32C759]/30 rounded text-[11px]">
                   {(previewResult?.summary.totalRecords || importSummary?.totalRecords)} Total Records
                 </span>
               </div>
 
               {/* Stat breakdown pills */}
               <div className="grid grid-cols-3 gap-2.5 pt-1">
-                <div className="p-2.5 bg-white rounded-lg border border-red-200">
-                  <span className="text-[10px] font-bold text-red-600 uppercase block">Rejection</span>
-                  <span className="text-base font-black text-red-700 block">
+                <div className="p-2.5 bg-[#141414] rounded-lg border border-[#FF453A]/30">
+                  <span className="text-[10px] font-bold text-[#FF453A] uppercase block">Rejection</span>
+                  <span className="text-base font-black text-[#FF453A] block">
                     {formatNumber(previewResult?.summary.rejectionQty || importSummary?.rejectionQty || 0)} pcs
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-[#A6A6A6]">
                     Cost: {formatCurrency(previewResult?.summary.rejectionCost || importSummary?.rejectionCost || 0)}
                   </span>
                 </div>
 
-                <div className="p-2.5 bg-white rounded-lg border border-orange-200">
-                  <span className="text-[10px] font-bold text-orange-600 uppercase block">Rework</span>
-                  <span className="text-base font-black text-orange-700 block">
+                <div className="p-2.5 bg-[#141414] rounded-lg border border-[#FF7900]/30">
+                  <span className="text-[10px] font-bold text-[#FF8C1A] uppercase block">Rework</span>
+                  <span className="text-base font-black text-[#FF8C1A] block">
                     {formatNumber(previewResult?.summary.reworkQty || importSummary?.reworkQty || 0)} pcs
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-[#A6A6A6]">
                     Cost: {formatCurrency(previewResult?.summary.reworkCost || importSummary?.reworkCost || 0)}
                   </span>
                 </div>
 
-                <div className="p-2.5 bg-white rounded-lg border border-purple-200">
-                  <span className="text-[10px] font-bold text-purple-600 uppercase block">FQC Fallout</span>
-                  <span className="text-base font-black text-purple-700 block">
+                <div className="p-2.5 bg-[#141414] rounded-lg border border-[#A78BFA]/30">
+                  <span className="text-[10px] font-bold text-[#C4B5FD] uppercase block">FQC Fallout</span>
+                  <span className="text-base font-black text-[#C4B5FD] block">
                     {formatNumber(previewResult?.summary.fqcQty || importSummary?.fqcQty || 0)} pcs
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-[#A6A6A6]">
                     {(previewResult?.summary.fqcCount || importSummary?.fqcCount || 0)} logged audits
                   </span>
                 </div>
               </div>
 
-              <div className="text-[11px] text-slate-600 pt-1">
-                <strong>Sheets Parsed:</strong>{' '}
+              <div className="text-[11px] text-[#A6A6A6] pt-1">
+                <strong className="text-[#FFFFFF]">Sheets Parsed:</strong>{' '}
                 {(previewResult?.summary.sheetsParsed || importSummary?.sheetsParsed || []).join(', ')}
               </div>
             </div>
@@ -254,17 +254,17 @@ export function ExcelImportModal() {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-3.5 bg-[#080808] border-t border-[#242424] flex items-center justify-between">
           <button
             onClick={handleClose}
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-[#A6A6A6] bg-[#141414] border border-[#242424] hover:bg-[#1F1F1F] hover:text-[#FFFFFF] transition-colors"
           >
             Cancel
           </button>
 
           <button
             onClick={handleApply}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors"
+            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#FF7900] hover:bg-[#FF8C1A] text-white font-bold text-xs shadow-md shadow-[#FF7900]/25 transition-colors cursor-pointer"
           >
             <span>Apply to Dashboard</span>
             <ArrowRight className="w-4 h-4" />

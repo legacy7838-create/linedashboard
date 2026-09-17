@@ -36,9 +36,6 @@ function sanitizeExportRow<T extends Record<string, unknown>>(row: T): T {
 export default function ReportsPage() {
   const { qualityRecords, fqcRecords, activeMonth, hasData, importedFileName, setIsImportModalOpen } = useQualityData();
 
-  // `selectedMonth` starts as null meaning "follow the global active month".
-  // Selecting a specific month sets it explicitly, which avoids mirroring
-  // activeMonth into state via an effect.
   const [selectedMonthOverride, setSelectedMonthOverride] = useState<string | null>(null);
   const selectedMonth = selectedMonthOverride ?? activeMonth;
   const setSelectedMonth = setSelectedMonthOverride;
@@ -146,7 +143,7 @@ export default function ReportsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF7900] hover:bg-[#FF8C1A] text-white shadow-md shadow-[#FF7900]/25 transition-colors cursor-pointer"
             >
               <UploadCloud className="w-4 h-4" />
               <span>Import Excel</span>
@@ -154,7 +151,7 @@ export default function ReportsPage() {
             <button
               onClick={handlePrint}
               disabled={!hasData}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#141414] border border-[#242424] text-[#A6A6A6] hover:bg-[#1A1A1A] hover:text-[#FFFFFF] transition-colors shadow-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print</span>
@@ -162,7 +159,7 @@ export default function ReportsPage() {
             <button
               onClick={handleExportCSV}
               disabled={!hasData || isExporting}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#32C759] hover:bg-[#32C759]/90 text-white transition-colors shadow-md shadow-[#32C759]/25 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               {isExporting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -183,161 +180,160 @@ export default function ReportsPage() {
         />
       ) : (
         <>
+          {/* Report Parameter Controls */}
+          <div className="bg-[#141414] rounded-xl border border-[#242424] shadow-md shadow-black/40 p-4">
+            <div className="flex items-center gap-2 pb-3 mb-3 border-b border-[#242424] text-xs font-bold uppercase tracking-wider text-[#FFFFFF]">
+              <Filter className="w-4 h-4 text-[#FF7900]" />
+              <span>Report Configuration Parameters</span>
+            </div>
 
-      {/* Report Parameter Controls */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
-        <div className="flex items-center gap-2 pb-3 mb-3 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-700">
-          <Filter className="w-4 h-4 text-blue-600" />
-          <span>Report Configuration Parameters</span>
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              {/* Month */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#A6A6A6] block mb-1">
+                  Select Month
+                </label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full bg-[#0C0C0C] border border-[#242424] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#FFFFFF] focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900] cursor-pointer"
+                >
+                  <option value="ALL">All Available Months</option>
+                  {filterOptions.months.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          {/* Month */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-              Select Month
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="ALL">All Available Months</option>
-              {filterOptions.months.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
+              {/* Data Type */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#A6A6A6] block mb-1">
+                  Data Category
+                </label>
+                <select
+                  value={dataType}
+                  onChange={(e) => setDataType(e.target.value as 'ALL' | QualityType)}
+                  className="w-full bg-[#0C0C0C] border border-[#242424] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#FFFFFF] focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900] cursor-pointer"
+                >
+                  <option value="ALL">All Categories (Rej + Rew + FQC)</option>
+                  <option value="REJECTION">Line Rejection Only</option>
+                  <option value="REWORK">Line Rework Only</option>
+                  <option value="FQC_FALLOUT">FQC Fallout Only</option>
+                </select>
+              </div>
 
-          {/* Data Type */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-              Data Category
-            </label>
-            <select
-              value={dataType}
-              onChange={(e) => setDataType(e.target.value as 'ALL' | QualityType)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="ALL">All Categories (Rej + Rew + FQC)</option>
-              <option value="REJECTION">Line Rejection Only</option>
-              <option value="REWORK">Line Rework Only</option>
-              <option value="FQC_FALLOUT">FQC Fallout Only</option>
-            </select>
-          </div>
+              {/* Line Filter */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#A6A6A6] block mb-1">
+                  Cell / Line
+                </label>
+                <select
+                  value={selectedLine}
+                  onChange={(e) => setSelectedLine(e.target.value)}
+                  className="w-full bg-[#0C0C0C] border border-[#242424] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#FFFFFF] focus:outline-none focus:border-[#FF7900] focus:ring-1 focus:ring-[#FF7900] cursor-pointer"
+                >
+                  <option value="ALL">All Cells & Lines</option>
+                  {filterOptions.cellsAndLines.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Line Filter */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-              Cell / Line
-            </label>
-            <select
-              value={selectedLine}
-              onChange={(e) => setSelectedLine(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="ALL">All Cells & Lines</option>
-              {filterOptions.cellsAndLines.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date Range */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-              Date Filter (Optional)
-            </label>
-            <div className="flex items-center gap-1.5">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-1/2 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800"
-              />
-              <span className="text-slate-400 text-xs">to</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-1/2 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800"
-              />
+              {/* Date Range */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#A6A6A6] block mb-1">
+                  Date Filter (Optional)
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-1/2 bg-[#0C0C0C] border border-[#242424] rounded-lg px-2 py-1 text-xs text-[#FFFFFF] focus:outline-none focus:border-[#FF7900]"
+                  />
+                  <span className="text-[#707070] text-xs">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-1/2 bg-[#0C0C0C] border border-[#242424] rounded-lg px-2 py-1 text-xs text-[#FFFFFF] focus:outline-none focus:border-[#FF7900]"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Report Summary Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
-          <div>
-            <h3 className="font-extrabold text-sm text-slate-900 uppercase">
-              Executive Report Summary: {selectedMonth}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              VE COMMERCIAL VEHICLE LIMITED | Internal Manufacturing Quality Audit
-            </p>
+          {/* Report Summary Card */}
+          <div className="bg-[#141414] rounded-xl border border-[#242424] shadow-md shadow-black/40 p-5">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#242424]">
+              <div>
+                <h3 className="font-extrabold text-sm text-[#FFFFFF] uppercase">
+                  Executive Report Summary: {selectedMonth}
+                </h3>
+                <p className="text-xs text-[#A6A6A6] mt-0.5">
+                  VE COMMERCIAL VEHICLE LIMITED | Internal Manufacturing Quality Audit
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#FF7900]/15 text-[#FF8C1A] border border-[#FF7900]/30">
+                {filteredQualityRecords.length + filteredFqcRecords.length} Filtered Entries
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+              <div className="p-3 bg-[#0C0C0C] rounded-lg border border-[#FF453A]/30">
+                <span className="text-[#FF453A] font-bold block">Rejection Qty</span>
+                <span className="text-xl font-black text-[#FF453A]">
+                  {formatNumber(summary.totalRejectionQty)} pcs
+                </span>
+                <span className="text-[11px] text-[#A6A6A6] block mt-0.5">
+                  Scrap Cost: {formatCurrency(summary.totalRejectionCost)}
+                </span>
+              </div>
+
+              <div className="p-3 bg-[#0C0C0C] rounded-lg border border-[#FF7900]/30">
+                <span className="text-[#FF8C1A] font-bold block">Rework Qty</span>
+                <span className="text-xl font-black text-[#FF8C1A]">
+                  {formatNumber(summary.totalReworkQty)} pcs
+                </span>
+                <span className="text-[11px] text-[#A6A6A6] block mt-0.5">
+                  Rework Cost: {formatCurrency(summary.totalReworkCost)}
+                </span>
+              </div>
+
+              <div className="p-3 bg-[#0C0C0C] rounded-lg border border-[#A78BFA]/30">
+                <span className="text-[#C4B5FD] font-bold block">FQC Fallout Qty</span>
+                <span className="text-xl font-black text-[#C4B5FD]">
+                  {formatNumber(summary.totalFqcQty)} pcs
+                </span>
+                <span className="text-[11px] text-[#A6A6A6] block mt-0.5">
+                  {summary.fqcDefectCount} audit defects
+                </span>
+              </div>
+
+              <div className="p-3 bg-[#0C0C0C] rounded-lg border border-[#242424]">
+                <span className="text-[#A6A6A6] font-bold block">Financial Total</span>
+                <span className="text-xl font-black text-[#FFFFFF]">
+                  {formatCurrency(summary.totalRejectionCost + summary.totalReworkCost)}
+                </span>
+                <span className="text-[11px] text-[#707070] block mt-0.5">
+                  Direct Loss Impact
+                </span>
+              </div>
+            </div>
           </div>
-          <span className="px-2.5 py-1 rounded text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
-            {filteredQualityRecords.length + filteredFqcRecords.length} Filtered Entries
-          </span>
-        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-          <div className="p-3 bg-red-50/60 rounded-lg border border-red-200/60">
-            <span className="text-red-700 font-bold block">Rejection Qty</span>
-            <span className="text-xl font-black text-red-800">
-              {formatNumber(summary.totalRejectionQty)} pcs
-            </span>
-            <span className="text-[11px] text-red-600 block mt-0.5">
-              Scrap Cost: {formatCurrency(summary.totalRejectionCost)}
-            </span>
-          </div>
-
-          <div className="p-3 bg-orange-50/60 rounded-lg border border-orange-200/60">
-            <span className="text-orange-700 font-bold block">Rework Qty</span>
-            <span className="text-xl font-black text-orange-800">
-              {formatNumber(summary.totalReworkQty)} pcs
-            </span>
-            <span className="text-[11px] text-orange-600 block mt-0.5">
-              Rework Cost: {formatCurrency(summary.totalReworkCost)}
-            </span>
-          </div>
-
-          <div className="p-3 bg-purple-50/60 rounded-lg border border-purple-200/60">
-            <span className="text-purple-700 font-bold block">FQC Fallout Qty</span>
-            <span className="text-xl font-black text-purple-800">
-              {formatNumber(summary.totalFqcQty)} pcs
-            </span>
-            <span className="text-[11px] text-purple-600 block mt-0.5">
-              {summary.fqcDefectCount} audit defects
-            </span>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <span className="text-slate-700 font-bold block">Financial Total</span>
-            <span className="text-xl font-black text-slate-900">
-              {formatCurrency(summary.totalRejectionCost + summary.totalReworkCost)}
-            </span>
-            <span className="text-[11px] text-slate-500 block mt-0.5">
-              Direct Loss Impact
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Report Records Table Preview */}
-      <QualityTable
-        records={filteredQualityRecords}
-        fqcRecords={filteredFqcRecords}
-        title="Report Records Preview"
-        subtitle="Complete records included in the generated quality audit report"
-      />
-      </>
+          {/* Report Records Table Preview */}
+          <QualityTable
+            records={filteredQualityRecords}
+            fqcRecords={filteredFqcRecords}
+            title="Report Records Preview"
+            subtitle="Complete records included in the generated quality audit report"
+          />
+        </>
       )}
     </div>
   );

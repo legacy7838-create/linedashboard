@@ -13,16 +13,16 @@ export function EmptyState({
   onReset,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300">
-      <div className="w-12 h-12 rounded-full bg-slate-200/80 flex items-center justify-center text-slate-500 mb-3">
+    <div className="flex flex-col items-center justify-center p-12 text-center bg-[#141414] rounded-xl border border-dashed border-[#242424]">
+      <div className="w-12 h-12 rounded-full bg-[#1F1F1F] flex items-center justify-center text-[#FF7900] mb-3">
         <FilterX className="w-6 h-6" />
       </div>
-      <h4 className="text-sm font-bold text-slate-800">{title}</h4>
-      <p className="text-xs text-slate-500 max-w-sm mt-1 mb-4">{message}</p>
+      <h4 className="text-sm font-bold text-[#FFFFFF]">{title}</h4>
+      <p className="text-xs text-[#A6A6A6] max-w-sm mt-1 mb-4">{message}</p>
       {onReset && (
         <button
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#FF7900] text-white hover:bg-[#FF8C1A] transition-colors shadow-md shadow-[#FF7900]/25 cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Reset All Filters
@@ -35,8 +35,8 @@ export function EmptyState({
 export function LoadingState({ message = 'Loading Quality Data...' }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center p-12 text-center">
-      <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-      <p className="text-xs font-semibold text-slate-600">{message}</p>
+      <div className="w-8 h-8 border-3 border-[#FF7900] border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p className="text-xs font-semibold text-[#A6A6A6]">{message}</p>
     </div>
   );
 }
